@@ -1,0 +1,52 @@
+/* Algemene stijl voor error berichten */
+.t-Alert.t-Alert--page {
+    background-color: #fdecea !important; /* Lichte rode achtergrond */
+    border-left: 4px solid #d32f2f !important; /* Rode zijbalk */
+    border-radius: 8px; /* Ronde hoeken */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Zachte schaduw */
+    
+    /* Voeg een fade-out effect toe na 4 seconden */
+    animation: fadeOut 1s ease-out 4s forwards;
+}
+
+/* Stijl voor de error header */
+.t-Alert .t-Alert-title {
+    font-weight: bold;
+    color: #b71c1c !important; /* Donkerrode tekstkleur */
+    font-size: 16px;
+}
+
+/* Stijl voor de error beschrijving */
+.t-Alert .t-Alert-body {
+    color: #5f6368 !important; /* Zachte grijze tekst */
+    font-size: 14px;
+}
+
+/* Error icoon */
+.t-Alert .t-Alert-icon {
+    color: #d32f2f !important; /* Donkerrode icoon kleur */
+}
+
+/* Stijl voor de sluitknop */
+.t-Alert .t-Button--closeAlert {
+    color: #d32f2f !important; /* Rode sluitknop */
+    opacity: 0.8;
+}
+
+.t-Alert .t-Button--closeAlert:hover {
+    opacity: 1;
+}
+
+/* Stijl voor waarschuwingen */
+.t-Alert--warning {
+    background-color: #fdecea !important; /* Gebruik dezelfde rode tint */
+    border-left: 4px solid #d32f2f !important;
+}
+
+/* Simpele fade-out animatie */
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+        visibility: hidden;
+    }
+}

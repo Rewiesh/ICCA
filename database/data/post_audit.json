@@ -1,0 +1,158 @@
+{
+    "audit": {
+      "Id": "38",
+      "Code": "2024",
+      "DateTime": "2025-03-14T21:55:12.407Z",
+      "SignatureImageId": {
+        "error": "Network error or invalid server response"
+      },
+      "PresentClients": [],
+      "Elements": [
+        {
+          "ElementComment": "",
+          "elements_auditId": 735,
+          "AuditId": "38",
+          "ElementValue": "",
+          "Id": "21",
+          "ElementLabel": "01. Aanwezigheid/status logboek"
+        },
+        {
+          "ElementComment": "",
+          "elements_auditId": 736,
+          "AuditId": "38",
+          "ElementValue": "",
+          "Id": "24",
+          "ElementLabel": "02. Uitstraling van de werkkast"
+        },
+        {
+          "ElementComment": "fgggggggggg",
+          "elements_auditId": 737,
+          "AuditId": "38",
+          "ElementValue": "O",
+          "Id": "26",
+          "ElementLabel": "03. Buiten entree zand vrij"
+        },
+        {
+          "ElementComment": "",
+          "elements_auditId": 738,
+          "AuditId": "38",
+          "ElementValue": "",
+          "Id": "27",
+          "ElementLabel": "03. Periodiek vloeronderhoud uitgevoerd"
+        },
+        {
+          "ElementComment": "",
+          "elements_auditId": 739,
+          "AuditId": "38",
+          "ElementValue": "",
+          "Id": "28",
+          "ElementLabel": "03. Uitstraling van werkkast"
+        },
+        {
+          "ElementComment": "",
+          "elements_auditId": 740,
+          "AuditId": "38",
+          "ElementValue": "",
+          "Id": "29",
+          "ElementLabel": "04. Binnenzijde koelkast"
+        },
+        {
+          "ElementComment": "",
+          "elements_auditId": 741,
+          "AuditId": "38",
+          "ElementValue": "",
+          "Id": "30",
+          "ElementLabel": "04. Buiten entree zand/onkruid vrij"
+        },
+        {
+          "ElementComment": "",
+          "elements_auditId": 742,
+          "AuditId": "38",
+          "ElementValue": "",
+          "Id": "31",
+          "ElementLabel": "04. Periodiek vloeronderhoud uitgevoerd"
+        },
+        {
+          "ElementComment": "",
+          "elements_auditId": 743,
+          "AuditId": "38",
+          "ElementValue": "",
+          "Id": "34",
+          "ElementLabel": "05. Buitenterrein zand vrij (indien van toepassin"
+        },
+        {
+          "ElementComment": "",
+          "elements_auditId": 744,
+          "AuditId": "38",
+          "ElementValue": "",
+          "Id": "35",
+          "ElementLabel": "06. Algemene opmerking"
+        },
+        {
+          "ElementComment": "",
+          "elements_auditId": 745,
+          "AuditId": "38",
+          "ElementValue": "",
+          "Id": "36",
+          "ElementLabel": "1. Opmerking"
+        },
+        {
+          "ElementComment": "",
+          "elements_auditId": 746,
+          "AuditId": "38",
+          "ElementValue": "",
+          "Id": "37",
+          "ElementLabel": "2. Opmerking"
+        },
+        {
+          "Id": "38",
+          "AuditId": "38",
+          "elements_auditId": 747,
+          "ElementComment": "",
+          "ElementValue": "",
+          "ElementLabel": "3. Opmerking"
+        }
+      ]
+    },
+    "forms": [
+      {
+        "Id": "b6f67fdb-3d56-b316-b47d-c52a107523ef",
+        "FloorId": "21",
+        "CategoryId": "22",
+        "Date": "2025-03-14T18:46:10.770Z",
+        "AreaCode": "Gym.12",
+        "CounterElements": "12",
+        "Remarks": "vvvvv",
+        "Errors": []
+      },
+      {
+        "Id": "a07f53af-b548-ea7d-31cc-60d3b20b520c",
+        "FloorId": "21",
+        "CategoryId": "25",
+        "Date": "2025-03-14T18:51:07.058Z",
+        "AreaCode": "Les.12",
+        "CounterElements": "12",
+        "Remarks": "sssss",
+        "Errors": []
+      },
+      {
+        "Id": "76b8af5c-d6dd-b7c8-4b86-7309444d07f3",
+        "FloorId": "21",
+        "CategoryId": "26",
+        "Date": "2025-03-14T18:55:12.175Z",
+        "AreaCode": "beh.12",
+        "CounterElements": "12",
+        "Remarks": "",
+        "Errors": [
+          {
+            "ElementTypeId": "47",
+            "ErrorTypeId": "1",
+            "LogBook": "12",
+            "TechnicalAspects": "12",
+            "Remark": null,
+            "Count": "3"
+          }
+        ]
+      }
+    ]
+  }
