@@ -1,0 +1,7 @@
+create table AreaDescriptions (
+        Id              number
+	,   ModuleId        number
+	,   Name            varchar2(4000)
+	,   Abbreviation    varchar2(50)
+	,   Active          number
+);

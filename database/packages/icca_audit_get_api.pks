@@ -98,7 +98,7 @@ as
         ,   audits      tt_audits
         );
 
-    procedure p_get_data (p_username in varchar2);
+    procedure p_get_data( p_username in varchar2 );
 
 end icca_audit_get_api;
 /

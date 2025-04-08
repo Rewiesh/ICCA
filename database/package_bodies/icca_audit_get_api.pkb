@@ -75,7 +75,7 @@ as
         cursor c_get_areas
         is
             select  *
-            from    icca_areas
+            from    icca_areas          ara 
             where   active = 'Y'
             ;
         -- 
@@ -193,6 +193,7 @@ as
             select  cat.id 
             ,       cat.name
             from    icca_categories cat
+            where   cat.active = 'Y'
             ;
         -- 
         -- variables
@@ -386,8 +387,11 @@ as
             join    icca_adt_performers   apr on adt.id = apr.adt_id
             join    icca_performers       pfr on pfr.id = apr.pfr_id
             join    icca_users            usr on usr.id = pfr.usr_id
+            join    icca_pfr_clients      pnt on ( pfr.id = pnt.pfr_id and pnt.cnt_id = cnt.id)
             where   upper(usr.username) = upper(b_username)
-            and     adt.active = 'Y'
+            and     adt.active              = 'Y'
+            and     adt.activate            = 'Y'
+            and     adt.audit_completed     = 'N'
             ;
         -- 
         -- variables
@@ -800,7 +804,7 @@ as
     --
     -----------------------------------------------------------------------------------------
     --       
-    procedure p_get_data ( p_username in varchar2 )
+    procedure p_get_data( p_username in varchar2 )
     is
         -- Variables
         lt_audit_api_json_obj   json_object_t;
@@ -810,10 +814,17 @@ as
         l_total_length          pls_integer;
     begin
         -- Convert data to JSON object
-        lt_audit_api_json_obj := f_audit_api_json_obj(f_audit_api_rec(p_username));
+        lt_audit_api_json_obj := f_audit_api_json_obj( f_audit_api_rec( p_username ) );
 
-        -- Convert JSON to CLOB
-        l_msg_clob := lt_audit_api_json_obj.to_clob();
+        -- Return actual JSON or fallback to empty {}
+        if lt_audit_api_json_obj is not null 
+        then
+            -- Convert JSON to CLOB
+            l_msg_clob := lt_audit_api_json_obj.to_clob();
+        else
+            -- return empty JSON
+            l_msg_clob := '{}';
+        end if;
 
         -- Get total length of the CLOB
         l_total_length := dbms_lob.getlength(l_msg_clob);

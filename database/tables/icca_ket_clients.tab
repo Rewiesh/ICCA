@@ -12,3 +12,5 @@ create table icca_ket_clients(
 alter table icca_ket_clients add constraint icca_kcn_pk primary key (id);
 alter table icca_ket_clients add constraint icca_kcn_ket_fk1 foreign key(ket_id) references icca_kpi_elementen(id);
 alter table icca_ket_clients add constraint icca_kcn_cnt_fk2 foreign key(cnt_id) references icca_clients(id);
+-- indexes
+create unique index icca_kcn_ket_cnt_uk_idx1 on icca_ket_clients ( ket_id, cnt_id );

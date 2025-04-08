@@ -6,8 +6,8 @@ GRANT CREATE ANY CONTEXT, CREATE JOB TO icca;
 BEGIN
   ORDS.ENABLE_SCHEMA(p_enabled => TRUE,
                     p_schema => 'ICCA',
-                    p_url_mapping_type => 'iccaapi',
-                    p_url_mapping_pattern => 'iccaapi',
+--                    p_url_mapping_type => 'iccaapi',
+--                    p_url_mapping_pattern => 'iccaapi',
                     p_auto_rest_auth => FALSE
                     );
   COMMIT;

@@ -22,4 +22,4 @@ create table icca_client_locations(
 alter table icca_client_locations add constraint icca_cln_pk primary key (id);
 alter table icca_client_locations add constraint icca_cln_cnt_fk1 foreign key(cnt_id) references icca_clients(id);
 -- indexes
-create unique index icca_cln_name_uk_idx1 on icca_client_locations (upper(name));
+create unique index icca_cln_name_uk_idx1 on icca_client_locations (cnt_id, upper(name));

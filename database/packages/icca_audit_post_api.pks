@@ -7,7 +7,7 @@ is
 
     -- audit data of kpi elements
     type t_kpi_element is record
-        (   id                  number
+        (   id                  number -- ket_id
         ,   audit_id            number
         ,   elements_audit_id   number
         ,   elementLabel        varchar2(100)
@@ -21,7 +21,9 @@ is
         (   element_type_id             number
         ,   error_type_id               number
         ,   log_book_remark             varchar2(4000)
+        ,   log_book_image_id           number
         ,   technical_aspects_remark    varchar2(4000)
+        ,   technical_aspects_image_id  number
         ,   error_count                 number
         );
     type tt_error is table of t_error index by pls_integer;
@@ -35,7 +37,7 @@ is
         ,   area_code           varchar2(100)
         ,   counter_elements    number
         ,   remarks             varchar2(4000)
-        ,   error               tt_errors
+        ,   error               tt_error
         );
     type tt_forms is table of t_form index by pls_integer;
 
@@ -50,7 +52,7 @@ is
         ,   forms               tt_forms
         );
 
-    procedure p_process_audit( p_audit_data in varchar2 );
+    procedure p_msg_handler( p_incomming_message_id in number );
 
 end icca_audit_post_api;
 /

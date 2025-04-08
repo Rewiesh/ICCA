@@ -15,7 +15,10 @@ is
         l_response      clob;
     begin
         -- get user credentials
-        lb_login_valid := icca_authentication.is_login_valid(p_username => p_username, p_password => p_password);
+        lb_login_valid := icca_authentication.is_login_valid(   p_username      => p_username
+                                                            ,   p_password      => p_password
+                                                            ,   p_user_group    => 'UGP_PERFORMERS'
+                                                            );
         --
         if lb_login_valid
         then
