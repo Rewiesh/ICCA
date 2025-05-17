@@ -23,8 +23,6 @@ is
         l_width                  number := 595; 
         l_height                 number := 842; 
         l_margin_x               number := 29; 
-        l_topright_textbox_start number := 0;
-        l_topright_textbox_width number := 0;
         l_offset_y               number := 0;
         l_image                  blob;
         --
@@ -138,17 +136,17 @@ is
         --
         if ln_orientatie = 'PORTRAIT' 
         then
-            l_ratio_x := l_ratio;
-            l_ratio_y := l_ratio;
-            l_width := l_width * l_ratio_x;
-            l_height := l_height * l_ratio_y;
+            l_ratio_x  := l_ratio;
+            l_ratio_y  := l_ratio;
+            l_width    := l_width * l_ratio_x;
+            l_height   := l_height * l_ratio_y;
             l_margin_x := l_margin_x * l_ratio_x;
         elsif ln_orientatie = 'LANDSCAPE' 
         then
-          l_ratio_x := l_ratio * 1.41421;
-          l_ratio_y := l_ratio / 1.41421;
-          l_width := l_width * l_ratio_x;
-          l_height := l_height * l_ratio_y;
+          l_ratio_x  := l_ratio * 1.41421;
+          l_ratio_y  := l_ratio / 1.41421;
+          l_width    := l_width * l_ratio_x;
+          l_height   := l_height * l_ratio_y;
           l_margin_x := l_margin_x * l_ratio_x;
         end if;
         --
