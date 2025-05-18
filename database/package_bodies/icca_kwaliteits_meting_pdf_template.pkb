@@ -23,6 +23,8 @@ is
         l_width                  number := 595; 
         l_height                 number := 842; 
         l_margin_x               number := 29; 
+        l_topright_textbox_start number := 0;
+        l_topright_textbox_width number := 0;
         l_offset_y               number := 0;
         l_image                  blob;
         --
@@ -320,10 +322,22 @@ is
         procedure p_build_kwaliteits_meting_body (  p_kwaliteits_meeting_values  t_kwaliteits_meeting_values
                                                  ) 
         is
-            l_y                 number  := 0;
-            l_up                number  := 430;
+            --
+            -- Variables algemeent       
             l_image_bar_line    blob;
             l_image_donut       blob;
+            --
+            -- DJ Grafief values berekening variables
+            --
+            l_up_down_blok1    number := 0 ;
+            l_up_down_blok2    number := 0 ;
+            l_up_down_blok3    number := 0 ;
+            l_up_down_blok4    number := 0 ;
+            l_up_down_blok5    number := 0 ;
+            l_up_down_blok6    number := 0 ;  
+            l_up_down_blok7    number := 0 ;
+            l_up_down_blok8    number := 0 ;
+            l_up_down_blok9    number := 0 ;                                                   
         begin
             --
             -- Bepaal me lettertype config
@@ -554,12 +568,645 @@ is
             --
             as_pdf3.set_font(p_family => 'times', p_style => 'B', p_fontsize_pt => 18);
             --
+            -- Label resultaten van de controle
+            --
             as_pdf3.write(  p_txt => 'Resultaten van de controle'
                           , p_x   => 40
-                          , p_y   => 740); 
+                          , p_y   => 750); 
             -- Bepaal me lettertype config
             --
             as_pdf3.set_font(p_family => 'times', p_style => 'N', p_fontsize_pt => 13);
+            --
+            -- Kleur Grijs voor pagina 2 labels en values
+            --
+            as_pdf3.set_color( p_rgb => '808080');             
+            --
+            --Label project page 3
+            --
+            as_pdf3.write(  p_txt => 'Project:'
+                          , p_x   => 87
+                          , p_y   => 715); 
+            --
+            -- Label rapportnummer page 3
+            --
+            as_pdf3.write(  p_txt => 'Rapportnummer:'
+                          , p_x   => 40
+                          , p_y   => 700); 
+            --
+            -- Label historisch verloop page 3
+            --
+            as_pdf3.write(  p_txt => 'Historisch verloop'
+                          , p_x   => 400
+                          , p_y   => 700); 
+            --              
+            -- Label verhouding dagelijkse-/ en cumaltieve foutsoorten page 3
+            --
+            as_pdf3.write(  p_txt => 'Verhouding'
+                          , p_x   => 360
+                          , p_y   => 415); 
+            --
+            -- label dagelijkse-/ en cumulatieve foutsoorten
+            --               
+            as_pdf3.write(  p_txt => 'Dagelijkse-/ en cumulatieve foutsoorten'
+                          , p_x   => 360
+                          , p_y   => 400); 
+            --
+            -- label Aantal foutsoorten
+            --               
+            as_pdf3.write(  p_txt => 'Aantal foutsoorten'
+                          , p_x   => 30
+                          , p_y   => 414); 
+            --
+            -- Value controle datum
+            --               
+            as_pdf3.write(  p_txt => 'Controle 29 december 2017'
+                          , p_x   => 30
+                          , p_y   => 400); 
+            --                                
+            -- Zet me kleur naar Wit voor me DJ grafiek values
+            --                                
+            as_pdf3.set_color( p_rgb => 'Ffffff');   --Ffffff   
+            --
+            -- Bepaal me lettertype config
+            --
+            as_pdf3.set_font(p_family => 'times', p_style => 'N', p_fontsize_pt => 11);                                     
+            --              
+            -- Grafiek DJ set Lijn 1 'Niet gehecht vuil licht stof'
+            -- 
+            as_pdf3.vertical_line(    p_x           => 40
+                                    , p_y           => 250
+                                    , p_height      => 120
+                                    , p_line_width  => 2.2
+                                    , p_line_color  => '808080'
+                                    );
+            --
+            -- Blok 1
+            --                                    
+            as_pdf3.vertical_line(    p_x           => 40
+                                    , p_y           => 250
+                                    , p_height      => 20
+                                    , p_line_width  => 20
+                                    , p_line_color  => '9ACD32'
+                                    ); 
+            --
+            -- Label blok 'Niet gehecht vuil licht stof'
+            --                                    
+            as_pdf3.vertical_line(    p_x           => 38
+                                    , p_y           => 205
+                                    , p_height      => 40
+                                    , p_line_width  => 30
+                                    , p_line_color  => '9ACD32'
+                                    ); 
+            --                        
+            -- Value Blok 1
+            --                        
+            as_pdf3.write(  p_txt   => '0'
+                          , p_x     => 37
+                          , p_y     => 255
+                          );                                     
+
+            --              
+            -- Grafiek DJ set Lijn 2 'Niet gehecht vuil licht Methode'
+            -- 
+            as_pdf3.vertical_line(    p_x           => 70
+                                    , p_y           => 250
+                                    , p_height      => 120
+                                    , p_line_width  => 2.2
+                                    , p_line_color  => '808080'
+                                    );
+            if 1 = 1
+            then 
+                l_up_down_blok2 := 60;
+            else 
+                l_up_down_blok2 := 0;    
+            end if;                                     
+            --
+            -- Blok 2
+            --                                    
+            as_pdf3.vertical_line(    p_x           => 70
+                                    , p_y           => 250 + l_up_down_blok2
+                                    , p_height      => 20
+                                    , p_line_width  => 20
+                                    , p_line_color  => '9ACD32'
+                                    );
+            --                        
+            -- Value Blok 2                        
+            --
+            as_pdf3.write(  p_txt   => '2'
+                          , p_x     => 67
+                          , p_y     => 255 + l_up_down_blok2
+                          );                                        
+            --
+            -- Label blok 'Niet gehecht vuil licht Methode'
+            --                                    
+            as_pdf3.vertical_line(    p_x           => 70
+                                    , p_y           => 205
+                                    , p_height      => 40
+                                    , p_line_width  => 30
+                                    , p_line_color  => '9ACD32'
+                                    );
+
+                                                                         
+            --              
+            -- Grafiek DJ set Lijn 3 'Aanslag'
+            -- 
+            as_pdf3.vertical_line(    p_x           => 100
+                                    , p_y           => 250
+                                    , p_height      => 120
+                                    , p_line_width  => 2.2
+                                    , p_line_color  => '808080'
+                                    );
+            --
+            -- Blok 3
+            --                                    
+            as_pdf3.vertical_line(    p_x           => 100
+                                    , p_y           => 250
+                                    , p_height      => 20
+                                    , p_line_width  => 20
+                                    , p_line_color  => '4682B4'
+                                    ); 
+            --                        
+            -- Value Blok 3                        
+            --
+            as_pdf3.write(  p_txt   => '0'
+                          , p_x     => 98
+                          , p_y     => 255
+                          );                                       
+            --
+            -- Label blok 'Aanslag'
+            --                                    
+            as_pdf3.vertical_line(    p_x           => 102
+                                    , p_y           => 205
+                                    , p_height      => 40
+                                    , p_line_width  => 30
+                                    , p_line_color  => '4682B4'
+                                    );
+                                                                        
+            --              
+            -- Grafiek DJ set Lijn 4 'Dicht stof'
+            -- 
+            as_pdf3.vertical_line(    p_x           => 135
+                                    , p_y           => 250
+                                    , p_height      => 120
+                                    , p_line_width  => 2.2
+                                    , p_line_color  => '808080'
+                                    );
+            --
+            -- Blok 4
+            --                                    
+            as_pdf3.vertical_line(    p_x           => 135
+                                    , p_y           => 250
+                                    , p_height      => 20
+                                    , p_line_width  => 20
+                                    , p_line_color  => '4682B4'
+                                    ); 
+            --                        
+            -- Value Blok 4                        
+            --
+            as_pdf3.write(  p_txt   => '0'
+                          , p_x     => 130
+                          , p_y     => 255
+                          );                                       
+            --
+            -- Label blok 'Dicht stof'
+            --                                    
+            as_pdf3.vertical_line(    p_x           => 134
+                                    , p_y           => 205
+                                    , p_height      => 40
+                                    , p_line_width  => 30
+                                    , p_line_color  => '4682B4'
+                                    );  
+                                                                        
+            --              
+            -- Grafiek DJ set Lijn 5 'Gehecht vuil methode'
+            -- 
+            as_pdf3.vertical_line(    p_x           => 165
+                                    , p_y           => 250
+                                    , p_height      => 120
+                                    , p_line_width  => 2.2
+                                    , p_line_color  => '808080'
+                                    );
+            --
+            -- Blok 5
+            --                                    
+            as_pdf3.vertical_line(    p_x           => 165
+                                    , p_y           => 250
+                                    , p_height      => 20
+                                    , p_line_width  => 20
+                                    , p_line_color  => '4682B4'
+                                    ); 
+            --                        
+            -- Value Blok 5                        
+            --
+            as_pdf3.write(  p_txt   => '0'
+                          , p_x     => 162
+                          , p_y     => 255
+                          );                                      
+            --
+            -- Label blok 'Gehecht vuil methode'
+            --                                    
+            as_pdf3.vertical_line(    p_x           => 166
+                                    , p_y           => 205
+                                    , p_height      => 40
+                                    , p_line_width  => 30
+                                    , p_line_color  => '4682B4'
+                                    ); 
+                                                                          
+            --              
+            -- Grafiek DJ set Lijn 6 'Gehecht vuil vlek vingertas'
+            -- 
+            as_pdf3.vertical_line(    p_x           => 195
+                                    , p_y           => 250
+                                    , p_height      => 120
+                                    , p_line_width  => 2.2
+                                    , p_line_color  => '808080'
+                                    );
+            --
+            -- Blok 6
+            --                                    
+            as_pdf3.vertical_line(    p_x           => 195
+                                    , p_y           => 250
+                                    , p_height      => 20
+                                    , p_line_width  => 20
+                                    , p_line_color  => '4682B4'
+                                    );
+            --                        
+            -- Value Blok 6                        
+            --
+            as_pdf3.write(  p_txt   => '0'
+                          , p_x     => 190
+                          , p_y     => 255
+                          );                                       
+            --
+            -- Label blok 'Gehecht vuil vlek vingertas'
+            --                                    
+            as_pdf3.vertical_line(    p_x           => 198
+                                    , p_y           => 205
+                                    , p_height      => 40
+                                    , p_line_width  => 30
+                                    , p_line_color  => '4682B4'
+                                    ); 
+                                                                           
+            --              
+            -- Grafiek DJ set Lijn 7 'Niet aangevuld'
+            -- 
+            as_pdf3.vertical_line(    p_x           => 230
+                                    , p_y           => 250
+                                    , p_height      => 120
+                                    , p_line_width  => 2.2
+                                    , p_line_color  => '808080'
+                                    );
+            --
+            -- Blok 7
+            --                                    
+            as_pdf3.vertical_line(    p_x           => 230
+                                    , p_y           => 250
+                                    , p_height      => 20
+                                    , p_line_width  => 20
+                                    , p_line_color  => 'D2B48C'
+                                    );
+            --                        
+            -- Value Blok 7                        
+            --
+            as_pdf3.write(  p_txt   => '0'
+                          , p_x     => 227
+                          , p_y     => 255
+                          );                                        
+            --
+            -- Label blok 'Niet aangevuld'
+            --                                    
+            as_pdf3.vertical_line(    p_x           => 230
+                                    , p_y           => 205
+                                    , p_height      => 40
+                                    , p_line_width  => 30
+                                    , p_line_color  => 'D2B48C'
+                                    );
+            --              
+            -- Grafiek DJ set Lijn 8 'Niet geleegd'
+            -- 
+            as_pdf3.vertical_line(    p_x           => 260
+                                    , p_y           => 250
+                                    , p_height      => 120
+                                    , p_line_width  => 2.2
+                                    , p_line_color  => '808080'
+                                    );
+            --
+            -- Blok 8
+            --                                    
+            as_pdf3.vertical_line(    p_x           => 260
+                                    , p_y           => 250
+                                    , p_height      => 20
+                                    , p_line_width  => 20
+                                    , p_line_color  => 'D2B48C'
+                                    );
+            --                        
+            -- Value Blok 8                        
+            --
+            as_pdf3.write(  p_txt   => '0'
+                          , p_x     => 255
+                          , p_y     => 255
+                          );                                       
+            --
+            -- Label blok 'Niet geleegd'
+            --                                    
+            as_pdf3.vertical_line(    p_x           => 262
+                                    , p_y           => 205
+                                    , p_height      => 40
+                                    , p_line_width  => 30
+                                    , p_line_color  => 'D2B48C'
+                                    );
+                                                                            
+            --              
+            -- Grafiek DJ set Lijn 9 'Spinrag'
+            -- 
+            as_pdf3.vertical_line(    p_x           => 290
+                                    , p_y           => 250
+                                    , p_height      => 120
+                                    , p_line_width  => 2.2
+                                    , p_line_color  => '808080'
+                                    );
+            --
+            -- Blok 9
+            --                                    
+            as_pdf3.vertical_line(    p_x           => 290
+                                    , p_y           => 250
+                                    , p_height      => 20
+                                    , p_line_width  => 20
+                                    , p_line_color  => 'D2B48C'
+                                    );
+            --                        
+            -- Value Blok 9                        
+            --
+            as_pdf3.write(  p_txt   => '0'
+                          , p_x     => 285
+                          , p_y     => 255
+                          );                                     
+            --
+            -- Label blok 'Spinrag'
+            --                                    
+            as_pdf3.vertical_line(    p_x           => 294
+                                    , p_y           => 205
+                                    , p_height      => 40
+                                    , p_line_width  => 30
+                                    , p_line_color  => 'D2B48C'
+                                    );                                                                                                                                                                                                                                                                                                      
+            --                                
+            -- Zet me kleur naar Wit voor me DJ grafiek values
+            --                                
+            as_pdf3.set_color( p_rgb => 'Ffffff');   --Ffffff
+            --
+            -- Bepaal me lettertype config
+            --
+            as_pdf3.set_font(p_family => 'times', p_style => 'N', p_fontsize_pt => 7);  
+            --
+            -- Label Lijn 1 'Niet gehecht vuil licht stof'
+            --
+            as_pdf3.write(  p_txt   => 'Niet gehecht vuil licht stof'
+                          , p_x     => 25
+                          , p_start => 25
+                          , p_y     => 235
+                          , p_width => 30); 
+            --
+            -- Label Lijn 2 'Niet gehecht vuil licht methode'
+            --
+            as_pdf3.write(  p_txt   => 'Niet gehecht vuil methode'
+                          , p_x     => 58
+                          , p_start => 58
+                          , p_y     => 235
+                          , p_width => 30);  
+            --
+            -- Label Lijn 3 'Aanslag''
+            --
+            as_pdf3.write(  p_txt   => 'Aanslag'
+                          , p_x     => 91
+                          , p_start => 91
+                          , p_y     => 220
+                          , p_width => 30);  
+            --
+            -- Label Lijn 4 'Dicht stof'
+            --
+            as_pdf3.write(  p_txt   => 'Dicht stof'
+                          , p_x     => 120
+                          , p_start => 120
+                          , p_y     => 220
+                          , p_width => 30);  
+            --
+            -- Label Lijn 5 'Gehecht vuil methode'
+            --
+            as_pdf3.write(  p_txt   => 'Gehecht vuil methode'
+                          , p_x     => 153
+                          , p_start => 153
+                          , p_y     => 230
+                          , p_width => 35); 
+            --
+            -- Label Lijn 6 'Gehecht vuil methode'
+            --
+            as_pdf3.write(  p_txt   => 'Gehecht vuil vlek vingertast'
+                          , p_x     => 185
+                          , p_start => 185
+                          , p_y     => 230
+                          , p_width => 35); 
+            --
+            -- Label Lijn 7 'Niet aangevuld'
+            --
+            as_pdf3.write(  p_txt   => 'Niet aangevuld'
+                          , p_x     => 216
+                          , p_start => 216
+                          , p_y     => 225
+                          , p_width => 30);   
+            --
+            -- Label Lijn 8 'Niet geleegd'
+            --
+            as_pdf3.write(  p_txt   => 'Niet geleegd'
+                          , p_x     => 250
+                          , p_start => 250
+                          , p_y     => 225
+                          , p_width => 30);   
+            --
+            -- Label Lijn 9 'Spinrag'
+            --
+            as_pdf3.write(  p_txt   => 'Spinrag'
+                          , p_x     => 282
+                          , p_start => 282
+                          , p_y     => 225
+                          , p_width => 30);
+            --
+            -- Donut blok dagelijkse 
+            --                  
+            as_pdf3.vertical_line(    p_x           => 370
+                                    , p_y           => 240
+                                    , p_height      => 40
+                                    , p_line_width  => 50
+                                    , p_line_color  => '9ACD32'
+                                    );  
+            --
+            -- Blok cumulatief 
+            --                  
+            as_pdf3.vertical_line(    p_x           => 430
+                                    , p_y           => 240
+                                    , p_height      => 40
+                                    , p_line_width  => 50
+                                    , p_line_color  => '4682B4'
+                                    );
+            --                        
+            -- Blok Diverse 
+            --                  
+            as_pdf3.vertical_line(    p_x           => 490
+                                    , p_y           => 240
+                                    , p_height      => 40
+                                    , p_line_width  => 50
+                                    , p_line_color  => 'D2B48C'
+                                    );
+            --
+            -- Labels Donut
+            --                         
+            as_pdf3.write(  p_txt   => 'Dagelijks'
+                          , p_x     => 355
+                          , p_y     => 260
+                          ); 
+            --
+            -- Label Cumulatief
+            --              
+            as_pdf3.write(  p_txt   => 'Cumulatief'
+                          , p_x     => 415
+                          , p_y     => 260
+                          ); 
+            --
+            -- Label Diverse
+            --              
+            as_pdf3.write(  p_txt   => 'Diverse'
+                          , p_x     => 480
+                          , p_y     => 260
+                          );
+            --
+            -- Tabel  Lange lijn 1ste 
+            --                  
+            as_pdf3.vertical_line(    p_x           => 280
+                                    , p_y           => 190
+                                    , p_height      => 2
+                                    , p_line_width  => 510
+                                    , p_line_color  => '9ACD32'
+                                    );
+            --
+            -- Begin vertical 
+            --                       
+            as_pdf3.vertical_line(    p_x           => 25
+                                    , p_y           => 150
+                                    , p_height      => 42
+                                    , p_line_width  => 2
+                                    , p_line_color  => '9ACD32'
+                                    );
+            --
+            -- Laatste vertical
+            --                        
+            as_pdf3.vertical_line(    p_x           => 535
+                                    , p_y           => 150
+                                    , p_height      => 42
+                                    , p_line_width  => 2
+                                    , p_line_color  => '9ACD32'
+                                    );                                    
+            --
+            --   2de lijn lange grijse
+            --                     
+            as_pdf3.vertical_line(    p_x           => 280
+                                    , p_y           => 170
+                                    , p_height      => 2
+                                    , p_line_width  => 510
+                                    , p_line_color  => '808080'
+                                    ); 
+            --
+            -- laatste lijn
+            --                        
+            as_pdf3.vertical_line(    p_x           => 280
+                                    , p_y           => 150
+                                    , p_height      => 2
+                                    , p_line_width  => 510
+                                    , p_line_color  => '9ACD32'
+                                    );
+            --
+            -- Tussen vertical 1ste
+            --                        
+            as_pdf3.vertical_line(    p_x           => 120
+                                    , p_y           => 150
+                                    , p_height      => 42
+                                    , p_line_width  => 2
+                                    , p_line_color  => '808080'
+                                    );   
+            --
+            -- Tussen vertical 2de
+            --                        
+            as_pdf3.vertical_line(    p_x           => 260
+                                    , p_y           => 150
+                                    , p_height      => 42
+                                    , p_line_width  => 2
+                                    , p_line_color  => '808080'
+                                    );
+            --
+            -- Tussen vertical 3de
+            --                        
+            as_pdf3.vertical_line(    p_x           => 350
+                                    , p_y           => 150
+                                    , p_height      => 42
+                                    , p_line_width  => 2
+                                    , p_line_color  => '808080'
+                                    );  
+            --
+            -- Tussen vertical 4de
+            --                        
+            as_pdf3.vertical_line(    p_x           => 465
+                                    , p_y           => 150
+                                    , p_height      => 42
+                                    , p_line_width  => 2
+                                    , p_line_color  => '808080'
+                                    );                                                                                                                                                    
+            --                                
+            -- Zet me kleur naar Zwart voor me tabel
+            --                                
+            as_pdf3.set_color( p_rgb => '000000');   --Ffffff
+            --
+            -- Bepaal me lettertype config
+            --
+            as_pdf3.set_font(p_family => 'times', p_style => 'B', p_fontsize_pt => 10);                                   
+            --
+            -- Label Categorie
+            --              
+            as_pdf3.write(  p_txt   => 'Categorie'
+                          , p_x     => 28
+                          , p_y     => 180
+                          ); 
+            --
+            -- Label Tel-element
+            --              
+            as_pdf3.write(  p_txt   => 'Tel-element'
+                          , p_x     => 160
+                          , p_y     => 180
+                          );
+            --
+            -- Label Goedkeurgrens
+            --              
+            as_pdf3.write(  p_txt   => 'Goedkeurgrens'
+                          , p_x     => 270
+                          , p_y     => 180
+                          );
+            --
+            -- Label Aantal behaalde fouten
+            --              
+            as_pdf3.write(  p_txt   => 'Aantal behaalde fouten'
+                          , p_x     => 360
+                          , p_y     => 180
+                          ); 
+            --
+            -- Label Beoordeling
+            --              
+            as_pdf3.write(  p_txt   => 'Beoordeling'
+                          , p_x     => 470
+                          , p_y     => 180
+                          );                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+            -- --                                                                                                                                                         
+            --
+            -- Bepaal me lettertype config
+            --
+            as_pdf3.set_font(p_family => 'times', p_style => 'N', p_fontsize_pt => 13);             
             --
             -- Tijdelijk foto voor bar + line
             --                                       
@@ -592,12 +1239,12 @@ is
             -- Tijdelijke om me foto te tonen donut
             --        
             as_pdf3.put_image(p_img     => l_image_donut
-                            , p_x       => 400
-                            , p_y       => 850
-                            , p_width   =>  600
-                            , p_height  =>  500
-                            , p_align   =>  'start'
-                            , p_valign  =>  'center'
+                            , p_x       => 350
+                            , p_y       => 950
+                            , p_width   => 600
+                            , p_height  => 500
+                            , p_align   => 'start'
+                            , p_valign  => 'center'
                             );                                                           
             --
             -- Zet me header voor pagina 3
@@ -621,7 +1268,122 @@ is
             --
             p_build_header( p_format                    => 'A4'
                          ,  p_kwaliteits_meeting_values => p_kwaliteits_meeting_values
-                         );          
+                         );
+            --                                
+            -- Zet me kleur naar Zwart voor me tabel
+            --                                
+            as_pdf3.set_color( p_rgb => '000000');                            
+            --                                                                                                                                                         
+            --
+            -- Bepaal me lettertype config
+            --
+            as_pdf3.set_font(p_family => 'times', p_style => 'B', p_fontsize_pt => 16);
+            --
+            -- Label Opmerking op ruimteniveau
+            --  
+            as_pdf3.write(  p_txt   => 'Opmerking op ruimteniveau:'
+                          , p_x     => 30
+                          , p_y     => 750
+                          );
+            --
+            -- Balk
+            --                        
+            as_pdf3.vertical_line(    p_x           => 300
+                                    , p_y           => 720
+                                    , p_height      => 20
+                                    , p_line_width  => 550
+                                    , p_line_color  => '9ACD32'
+                                    ); 
+            --
+            -- Tussen vertical 1ste
+            --                        
+            as_pdf3.vertical_line(    p_x           => 110
+                                    , p_y           => 720
+                                    , p_height      => 20
+                                    , p_line_width  => 2
+                                    , p_line_color  => '808080'
+                                    ); 
+            --
+            -- Tussen vertical 2de
+            --                        
+            as_pdf3.vertical_line(    p_x           => 220
+                                    , p_y           => 720
+                                    , p_height      => 20
+                                    , p_line_width  => 2
+                                    , p_line_color  => '808080'
+                                    );
+            --
+            -- Tussen vertical 3de
+            --                        
+            as_pdf3.vertical_line(    p_x           => 320
+                                    , p_y           => 720
+                                    , p_height      => 20
+                                    , p_line_width  => 2
+                                    , p_line_color  => '808080'
+                                    ); 
+            --
+            -- Tussen vertical 4de
+            --                        
+            as_pdf3.vertical_line(    p_x           => 420
+                                    , p_y           => 720
+                                    , p_height      => 20
+                                    , p_line_width  => 2
+                                    , p_line_color  => '808080'
+                                    );    
+            --
+            -- Tussen vertical 5de
+            --                        
+            as_pdf3.vertical_line(    p_x           => 525
+                                    , p_y           => 720
+                                    , p_height      => 20
+                                    , p_line_width  => 2
+                                    , p_line_color  => '808080'
+                                    );                                                                                                           
+            --                                                                                                                           
+            -- Bepaal me lettertype config
+            --
+            as_pdf3.set_font(p_family => 'times', p_style => 'B', p_fontsize_pt => 13);
+            --
+            -- Label Ruimte nr.     
+            as_pdf3.write(  p_txt   => 'Ruimte nr.'
+                          , p_x     => 30
+                          , p_y     => 725
+                          );      
+            --
+            -- Label Categorie
+            --  
+            as_pdf3.write(  p_txt   => 'Categorie'
+                          , p_x     => 115
+                          , p_y     => 725
+                          ); 
+            --
+            -- Label Element
+            --  
+            as_pdf3.write(  p_txt   => 'Element'
+                          , p_x     => 225
+                          , p_y     => 725
+                          ); 
+            --
+            -- Label Vuilsoort
+            --  
+            as_pdf3.write(  p_txt   => 'Vuilsoort'
+                          , p_x     => 325
+                          , p_y     => 725
+                          );  
+            --
+            -- Label Opmerking
+            --  
+            as_pdf3.write(  p_txt   => 'Opmerking'
+                          , p_x     => 425
+                          , p_y     => 725
+                          );  
+            --
+            -- Label Foto nr.
+            --  
+            as_pdf3.write(  p_txt   => 'Foto nr.'
+                          , p_x     => 525
+                          , p_y     => 725
+                          );                                                                                                                                                                                                                                                       
             --
             -- Zet me footer voor pagina 4
             --
@@ -638,7 +1400,200 @@ is
             --
             p_build_header( p_format                    => 'A4'
                          ,  p_kwaliteits_meeting_values => p_kwaliteits_meeting_values
-                         );           
+                         );
+            --
+            -- Balk
+            --                        
+            as_pdf3.vertical_line(    p_x           => 300
+                                    , p_y           => 420
+                                    , p_height      => 20
+                                    , p_line_width  => 550
+                                    , p_line_color  => '9ACD32'
+                                    ); 
+            --
+            -- Balk laatste lijn 2de
+            --                        
+            as_pdf3.vertical_line(    p_x           => 300
+                                    , p_y           => 400
+                                    , p_height      => 2
+                                    , p_line_width  => 550
+                                    , p_line_color  => '9ACD32'
+                                    );    
+            --
+            -- Tussen vertical 1ste
+            --                        
+            as_pdf3.vertical_line(    p_x           => 26
+                                    , p_y           => 400
+                                    , p_height      => 20
+                                    , p_line_width  => 2
+                                    , p_line_color  => '9ACD32'
+                                    );
+            --
+            -- Tussen vertical 2de
+            --                        
+            as_pdf3.vertical_line(    p_x           => 175
+                                    , p_y           => 400
+                                    , p_height      => 20
+                                    , p_line_width  => 2
+                                    , p_line_color  => '808080'
+                                    );
+            --
+            -- Tussen vertical 3de lijn ( laatste)
+            --                        
+            as_pdf3.vertical_line(    p_x           => 574
+                                    , p_y           => 400
+                                    , p_height      => 20
+                                    , p_line_width  => 2
+                                    , p_line_color  => '9ACD32'
+                                    );   
+            --
+            -- Balk 2de
+            --                        
+            as_pdf3.vertical_line(    p_x           => 300
+                                    , p_y           => 300
+                                    , p_height      => 20
+                                    , p_line_width  => 550
+                                    , p_line_color  => '9ACD32'
+                                    );  
+            --
+            -- Tussen horizontaal 1ste
+            --                        
+            as_pdf3.vertical_line(    p_x           => 26
+                                    , p_y           => 240
+                                    , p_height      => 60
+                                    , p_line_width  => 2
+                                    , p_line_color  => '9ACD32'
+                                    ); 
+            --
+            -- Balk laatste lijn 2de
+            --                        
+            as_pdf3.vertical_line(    p_x           => 300
+                                    , p_y           => 240
+                                    , p_height      => 2
+                                    , p_line_width  => 550
+                                    , p_line_color  => '9ACD32'
+                                    );
+            --
+            -- Tussen verticaal 1ste
+            --                        
+            as_pdf3.vertical_line(    p_x           => 300
+                                    , p_y           => 280
+                                    , p_height      => 2
+                                    , p_line_width  => 550
+                                    , p_line_color  => '808080'
+                                    );                                      
+            --
+            -- Tussen vertical 1ste
+            --                        
+            as_pdf3.vertical_line(    p_x           => 300
+                                    , p_y           => 260
+                                    , p_height      => 2
+                                    , p_line_width  => 550
+                                    , p_line_color  => '808080'
+                                    );
+            --
+            -- Tussen verticaal 1ste
+            --                        
+            as_pdf3.vertical_line(    p_x           => 200
+                                    , p_y           => 240
+                                    , p_height      => 60
+                                    , p_line_width  => 2
+                                    , p_line_color  => '808080'
+                                    );   
+            --
+            -- Tussen verticaal 2de
+            --                        
+            as_pdf3.vertical_line(    p_x           => 400
+                                    , p_y           => 240
+                                    , p_height      => 60
+                                    , p_line_width  => 2
+                                    , p_line_color  => '808080'
+                                    );                                                                                                                      
+            --
+            -- Tussen verticaal laatste
+            --                        
+            as_pdf3.vertical_line(    p_x           => 574
+                                    , p_y           => 240
+                                    , p_height      => 60
+                                    , p_line_width  => 2
+                                    , p_line_color  => '9ACD32'
+                                    );
+            --                                                                                                 
+            -- Zet me kleur naar Zwart voor me tabel
+            --                                
+            as_pdf3.set_color( p_rgb => '000000');                            
+            --
+            -- Bepaal me lettertype config
+            --
+            as_pdf3.set_font(p_family => 'times', p_style => 'B', p_fontsize_pt => 16);
+            --
+            -- Label Foto's gebouw technisch:
+            --  
+            as_pdf3.write(  p_txt   => 'Foto''s''gebouw technisch:'
+                          , p_x     => 40
+                          , p_y     => 760
+                          );  
+            --
+            -- Bepaal me lettertype config
+            --
+            as_pdf3.set_font(p_family => 'times', p_style => 'B', p_fontsize_pt => 12);  
+            --
+            -- Label algemene opmerkingen:
+            --                
+            as_pdf3.write(  p_txt   => 'Algemene Opmerkingen'
+                          , p_x     => 25
+                          , p_y     => 450
+                          ); 
+            --
+            -- Bepaal me lettertype config
+            --
+            as_pdf3.set_font(p_family => 'times', p_style => 'B', p_fontsize_pt => 14);                             
+            --
+            -- Label Ruimtenummer
+            --                
+            as_pdf3.write(  p_txt   => 'Ruimtenummer'
+                          , p_x     => 30
+                          , p_y     => 425
+                          ); 
+            --
+            -- Label Opmerkingen
+            --                
+            as_pdf3.write(  p_txt   => 'Opmerkingen'
+                          , p_x     => 175
+                          , p_y     => 425
+                          );
+            --
+            -- Label Algemeen
+            --                
+            as_pdf3.write(  p_txt   => 'Algemeen'
+                          , p_x     => 80
+                          , p_y     => 305
+                          ); 
+            --
+            -- Label Status
+            --                
+            as_pdf3.write(  p_txt   => 'Status'
+                          , p_x     => 275
+                          , p_y     => 305
+                          );
+            --
+            -- Label Opmerkingen
+            --                
+            as_pdf3.write(  p_txt   => 'Opmerkingen'
+                          , p_x     => 450
+                          , p_y     => 305
+                          );                                                                                          
+            --
+            -- Bepaal me lettertype config
+            --
+            as_pdf3.set_font(p_family => 'times', p_style => 'B', p_fontsize_pt => 12);                            
+            --
+            -- Label Overige-en hygiëne aspecten
+            --                
+            as_pdf3.write(  p_txt   => 'Overige-en hygiëne aspecten'
+                          , p_x     => 30
+                          , p_y     => 325
+                          );                                                                                                                                     
             --
             -- Zet me footer voor pagina 5
             --
@@ -692,7 +1647,7 @@ is
     --       
     -----------------------------------------------------------------------------
     --
-    --  ** build and return kwaliteits meting pdf **
+    --  ** $2, build and return kwaliteits meting pdf **
     function f_get_kwaliteits_meting_pdf(   p_kwaliteits_meeting_values  t_kwaliteits_meeting_values  )
     return blob
     is
