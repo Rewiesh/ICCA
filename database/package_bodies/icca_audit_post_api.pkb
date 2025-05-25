@@ -94,7 +94,7 @@ is
         --
         for i in 0 .. l_count - 1 
         loop
-            --
+            --LogbookImageId
             l_error_obj := treat( p_errors_json_arr.get(i) as json_object_t );
             --
             lr_errors(i + 1).element_type_id            := l_error_obj.get_number('ElementTypeId');
@@ -422,7 +422,9 @@ is
                             ,       p_forms(i).error(y).element_type_id             as epe_id
                             ,       p_forms(i).error(y).error_count                 as error_count
                             ,       p_forms(i).error(y).log_book_remark             as log_book_remark
+                            ,       p_forms(i).error(y).log_book_image_id           as log_book_image_id
                             ,       p_forms(i).error(y).technical_aspects_remark    as technical_aspects_remark
+                            ,       p_forms(i).error(y).technical_aspects_image_id  as technical_aspects_image_id
                             from    dual
                     ) src
                     on (    dest.fom_id = src.fom_id
@@ -430,12 +432,14 @@ is
                         and dest.epe_id = src.epe_id
                         )
                 when not matched 
-                    then insert ( dest.fom_id, dest.ete_id, dest.epe_id, dest.error_count, dest.log_book_remark, dest.technical_aspects_remark )
-                        values ( src.fom_id, src.ete_id, src.epe_id, src.error_count, src.log_book_remark, src.technical_aspects_remark )
+                    then insert ( dest.fom_id, dest.ete_id, dest.epe_id, dest.error_count, dest.log_book_remark, dest.log_book_image_id, dest.technical_aspects_remark, dest.technical_aspects_image_id )
+                        values ( src.fom_id, src.ete_id, src.epe_id, src.error_count, src.log_book_remark, src.log_book_image_id, src.technical_aspects_remark, src.technical_aspects_image_id)
                 when matched
                     then update set dest.error_count                = src.error_count
                                 ,   dest.log_book_remark            = src.log_book_remark
                                 ,   dest.technical_aspects_remark   = src.technical_aspects_remark
+                                ,   dest.log_book_image_id          = src.log_book_image_id
+                                ,   dest.technical_aspects_image_id = src.technical_aspects_image_id
                 ;
                 --
             end loop;

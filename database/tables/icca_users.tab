@@ -19,4 +19,4 @@ alter table icca_users add constraint icca_usr_ugp_fk1 foreign key (ugp_id) refe
 alter table icca_users add constraint icca_usr_bch_fk2 foreign key (bch_id) references icca_branches(id);
 -- indexes
 create unique index icca_usr_username_uk_idx1 on icca_users (upper(username));
-create unique index icca_usr_email_uk_idx2 on icca_users (upper(email));
+-- create unique index icca_usr_email_uk_idx2 on icca_users (upper(email)); -- dropped (email niet unqiue)

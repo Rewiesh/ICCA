@@ -12,6 +12,7 @@ create table icca_clients(
     ,   province        varchar2(255)
     ,   street_name     varchar2(255)
     ,   fax_number      varchar2(255)
+    ,   logo_id         number
     ,   zip_code        varchar2(255)
     ,   created_date    date          default sysdate                           not null
     ,   created_by      varchar2(50)                                            not null
