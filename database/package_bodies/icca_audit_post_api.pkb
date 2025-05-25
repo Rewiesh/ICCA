@@ -267,14 +267,16 @@ is
     --
     -----------------------------------------------------------------------------------------
     --  
-    procedure p_update_audit(   p_adt_id                in number 
+    procedure p_update_audit(   p_pfr_id                in number   
+                            ,   p_adt_id                in number 
                             ,   p_signature_image_id    in number 
                             )
     is
     begin
         --
         update  icca_audits
-        set     audit_completed     = 'Y'
+        set     pfr_id              = p_pfr_id
+        ,       audit_completed     = 'Y'
         ,       signature_image_id  = p_signature_image_id
         where   id = p_adt_id
         ;
@@ -348,6 +350,7 @@ is
     -----------------------------------------------------------------------------------------
     --
     procedure p_create_audit_forms(     p_adt_id in number
+                                    ,   p_pfr_id in number 
                                     ,   p_forms  in tt_forms
                                     )
     is
@@ -377,6 +380,7 @@ is
             -- merge form record
             merge into icca_adt_forms dest
                 using ( select  p_adt_id                                                                        as adt_id
+                        ,       p_pfr_id                                                                        as pfr_id
                         ,       p_forms(i).floor_id                                                             as flr_id
                         ,       p_forms(i).category_id                                                          as cat_id
                         ,       (   select  id 
@@ -395,10 +399,11 @@ is
                     and src.area_number = dest.area_number
                     ) 
             when not matched 
-                then insert (dest.adt_id, dest.flr_id, dest.cat_id, dest.ara_id, dest.element_count, dest.area_number, dest.remark)
-                    values (src.adt_id, src.flr_id, src.cat_id, src.ara_id, src.element_count, src.area_number, src.remark)
+                then insert (dest.adt_id, dest.pfr_id, dest.flr_id, dest.cat_id, dest.ara_id, dest.element_count, dest.area_number, dest.remark)
+                    values (src.adt_id, src.pfr_id, src.flr_id, src.cat_id, src.ara_id, src.element_count, src.area_number, src.remark)
             when matched
-                then update set dest.element_count  = src.element_count
+                then update set dest.pfr_id         = src.pfr_id
+                            ,   dest.element_count  = src.element_count
                             ,   dest.remark         = src.remark
             ;
             --
@@ -450,7 +455,8 @@ is
     --
     -----------------------------------------------------------------------------------------
     --  process de ingekomen audit gegevens    
-    procedure p_process_audit( p_audit in t_audit )
+    procedure p_process_audit(  p_pfr_id in number
+                            ,   p_audit  in t_audit )
     is
         -- variables
         ln_adt_id number;
@@ -461,7 +467,7 @@ is
         ln_adt_id := p_audit.id;
         --
         -- update audit to completed
-        p_update_audit( p_adt_id => ln_adt_id , p_signature_image_id => p_audit.signature_image_id );
+        p_update_audit( p_pfr_id => p_pfr_id, p_adt_id => ln_adt_id , p_signature_image_id => p_audit.signature_image_id );
         -- --
         -- insert clients die aanwezig waren tijden de audit 
         p_create_audit_present_clients( p_adt_id            => ln_adt_id
@@ -473,6 +479,7 @@ is
         --
         -- maak audit formulieren aan met bijhorende fouten
         p_create_audit_forms(   p_adt_id => ln_adt_id
+                            ,   p_pfr_id => p_pfr_id
                             ,   p_forms  => p_audit.forms
                             );
         --
@@ -498,7 +505,7 @@ is
         l_audit             := f_audit_values( l_audit_json_obj );
         --
         -- process de ingekomen gegevens
-        p_process_audit( l_audit );
+        p_process_audit( lr_ige.pfr_id, l_audit );
         --
     end p_msg_handler;
     --
