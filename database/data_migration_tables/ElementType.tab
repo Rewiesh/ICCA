@@ -1,0 +1,6 @@
+CREATE TABLE ElementType (
+  ElementTypeId RAW(20) NOT NULL,
+  ElementTypeValue varchar2(1000) NULL,
+  SortOrder NUMBER(10) NOT NULL,
+  epe_id number
+);

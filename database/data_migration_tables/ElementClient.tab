@@ -1,0 +1,6 @@
+CREATE TABLE ElementClient (
+    IdElement RAW(20) NOT NULL,
+    IdClient RAW(20) NOT NULL,
+    ElementClientStatus NUMBER(1) NOT NULL,
+    kcn_id number
+);

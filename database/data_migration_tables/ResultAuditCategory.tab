@@ -1,0 +1,9 @@
+CREATE TABLE ResultAuditCategory (
+    IdAudit          RAW(20) NOT NULL,
+    IdCategory       RAW(20) NOT NULL,
+    CounterElements  NUMBER NULL,
+    ApproveLimit     NUMBER NULL,
+    Rating           BINARY_FLOAT NULL,
+    IsSuficient      NUMBER(1) NULL,
+    ars_id number
+);

@@ -1,0 +1,5 @@
+CREATE TABLE ErrorKinds (
+  Id NUMBER NOT NULL,
+  Name varchar2(1000) NOT NULL,
+  ekd_id number
+);

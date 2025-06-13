@@ -4,6 +4,7 @@ create table icca_categories(
     ,   name            varchar2(50)                                            not null
     ,   fixed_value     varchar2(1)   default 'N'  
     ,   active          varchar2(1)   default 'Y'                               not null  
+    ,   migrated_data   varchar2(1 char) default 'N'                            not null
     ,   created_date    date          default sysdate                           not null
     ,   created_by      varchar2(50)                                            not null
     ,   modified_date   date          
@@ -13,3 +14,4 @@ create table icca_categories(
 alter table icca_categories add constraint icca_cat_pk primary key (id);
 -- indexes
 create unique index icca_cat_name_uk_idx1 on icca_categories (upper(name));
+alter table icca_categories add migrated_data varchar2(1 char) default 'N' not null;

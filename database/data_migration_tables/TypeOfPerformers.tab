@@ -1,0 +1,4 @@
+CREATE TABLE typeofperformers (
+    performers_id RAW(20) NOT NULL,
+    performertypes_id NUMBER NOT NULL
+);

@@ -1,0 +1,6 @@
+CREATE TABLE Element (
+  Id RAW(20) NOT NULL,
+  ElementLabel VARCHAR(1000) NOT NULL,
+  ElementStatus NUMBER(1) NULL,
+  ket_id number
+);

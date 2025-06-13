@@ -1,0 +1,5 @@
+CREATE TABLE ErrorCategories (
+  Id NUMBER NOT NULL,
+  Name varchar2(1000) NOT NULL,
+  ece_id number
+);

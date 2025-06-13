@@ -1,0 +1,13 @@
+CREATE TABLE buildings (
+    id            RAW(20)         ,  -- UUID als RAW(16), automatisch gegenereerd
+    name          varchar2(4000)            NOT NULL,                    -- nvarchar(max) wordt varchar2(4000)
+    size1          NUMBER(10)      NOT NULL,                    -- int wordt NUMBER(10)
+    client_id     RAW(20)         NOT NULL,                    -- UUID als RAW(16)
+    region        varchar2(4000),                                        -- nvarchar(max) NULL
+    city          varchar2(4000),                                        -- nvarchar(max) NULL
+    address       varchar2(4000),                                        -- nvarchar(max) NULL
+    contact_person varchar2(4000),                                       -- nvarchar(max) NULL
+    activate      NUMBER(1)       DEFAULT 0 NOT NULL,          -- bit wordt NUMBER(1), 0 of 1
+    email         VARCHAR2(100),                               -- nvarchar(100) wordt VARCHAR2(100)
+    cln_id        number
+);

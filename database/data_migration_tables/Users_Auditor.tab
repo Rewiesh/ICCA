@@ -1,0 +1,6 @@
+CREATE TABLE Users_Auditor (
+    Phone NVARCHAR2(4000),
+    Mobile NVARCHAR2(4000),
+    Id RAW(20) NOT NULL,
+    usr_id number
+);

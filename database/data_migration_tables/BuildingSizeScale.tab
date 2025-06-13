@@ -1,0 +1,8 @@
+CREATE TABLE BuildingSizeScale (
+    id          RAW(20)       NOT NULL,
+    min_value   NUMBER,
+    min_include NUMBER(1),  -- Oracle heeft geen BIT, gebruik NUMBER(1) als boolean
+    max_value   NUMBER,
+    max_include NUMBER(1),
+    cbe_id number
+);

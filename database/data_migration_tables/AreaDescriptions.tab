@@ -1,7 +1,8 @@
-create table AreaDescriptions (
-        Id              number
-	,   ModuleId        number
-	,   Name            varchar2(4000)
-	,   Abbreviation    varchar2(50)
-	,   Active          number
+CREATE TABLE AreaDescriptions (
+    Id          NUMBER NOT NULL,
+    ModuleId    NUMBER NOT NULL,
+    Name        varchar2(1000) NOT NULL,
+    Abbreviation CHAR(10) NOT NULL,
+    Active      NUMBER(1) DEFAULT 0 NOT NULL,
+    ara_id number
 );

@@ -1,0 +1,5 @@
+CREATE TABLE client_auditor (
+    auditor_id RAW(20) NOT NULL,
+    client_id  RAW(20) NOT NULL,
+    pnt_id number
+);

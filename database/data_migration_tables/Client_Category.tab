@@ -1,0 +1,5 @@
+CREATE TABLE client_category (
+    client_id RAW(20) NOT NULL,
+    category_id RAW(20) NOT NULL,
+    clt_id number
+);

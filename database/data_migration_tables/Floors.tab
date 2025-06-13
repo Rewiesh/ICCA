@@ -1,0 +1,7 @@
+CREATE TABLE Floors (
+  Id RAW(20) NOT NULL,
+  FloorName varchar2(2000) NOT NULL,
+  FloorNameAbv varchar2(2000) NULL,
+  SortOrder NUMBER NOT NULL,
+  flr_id number
+);

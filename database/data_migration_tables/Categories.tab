@@ -1,0 +1,8 @@
+CREATE TABLE Categories (
+  Id RAW(20) NOT NULL,
+  CategoryNameAbv varchar2(2000) NULL,
+  IsFixed NUMBER(1) NULL,
+  CategoryName varchar2(2000) NOT NULL,
+  SortOrder NUMBER NOT NULL,
+  cat_id number
+);

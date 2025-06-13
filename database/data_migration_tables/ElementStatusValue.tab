@@ -1,0 +1,6 @@
+CREATE TABLE ElementStatusValue (
+  Id RAW(20) NOT NULL,
+  ElementStatusValueCode CHAR(10) NOT NULL,
+  ElementStatusValueText varchar2(4000) NOT NULL,
+  SortOrder NUMBER NULL
+);

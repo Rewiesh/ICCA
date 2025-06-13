@@ -13,6 +13,7 @@ create table icca_client_locations(
     ,   mobile_number   varchar2(255)
     ,   email           varchar2(255)
     ,   active          varchar2(1)   default 'Y'                               not null
+    ,   migrated_data   varchar2(1 char) default 'N'                            not null
     ,   created_date    date          default sysdate                           not null
     ,   created_by      varchar2(50)                                            not null
     ,   modified_date   date         
@@ -23,3 +24,5 @@ alter table icca_client_locations add constraint icca_cln_pk primary key (id);
 alter table icca_client_locations add constraint icca_cln_cnt_fk1 foreign key(cnt_id) references icca_clients(id);
 -- indexes
 create unique index icca_cln_name_uk_idx1 on icca_client_locations (cnt_id, upper(name));
+
+alter table icca_client_locations add migrated_data varchar2(1 char) default 'N' not null;

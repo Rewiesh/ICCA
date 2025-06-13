@@ -1,0 +1,4 @@
+CREATE TABLE Branches (
+  Id RAW(16) NOT NULL,
+  BranchName CLOB NOT NULL
+);

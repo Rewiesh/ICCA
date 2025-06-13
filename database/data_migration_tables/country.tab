@@ -1,0 +1,5 @@
+CREATE TABLE country (
+    id RAW(20) NOT NULL,
+    country_name VARCHAR2(4000) NULL,
+    country_code CHAR(10) NOT NULL
+);

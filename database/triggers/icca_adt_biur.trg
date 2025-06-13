@@ -8,7 +8,7 @@ begin
     --
     :new.created_by     := upper(coalesce(regexp_substr(sys_context('userenv', 'client_identifier'), '^[^:]*'), user));
     :new.created_date   := sysdate;
-    :new.code           := icca_adt_code_seq.nextval;
+    :new.code           := case when :new.code is null then icca_adt_code_seq.nextval else :new.code end;
     :new.modified_by    := upper(coalesce(regexp_substr(sys_context('userenv', 'client_identifier'), '^[^:]*'), user));
     :new.modified_date  := sysdate;
     --

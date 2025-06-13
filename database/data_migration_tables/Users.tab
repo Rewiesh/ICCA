@@ -1,0 +1,8 @@
+CREATE TABLE Users (
+  Id RAW(20) NOT NULL,
+  UserName varchar2(4000) NOT NULL,
+  FirstName varchar2(4000) NULL,
+  LastName varchar2(4000) NULL,
+  ProfileImage RAW(16) NULL,
+  usr_id number
+);

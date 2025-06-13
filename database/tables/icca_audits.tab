@@ -4,6 +4,7 @@ create table icca_audits(
   , pfr_id              number                                                    
   , code                varchar2(50)                                              not null
   , audit_date          date
+  , last_control_date   date
   , active              varchar2(1)   default 'Y'                                 not null
   , cnt_id              number                                                    not null
   , cln_id              number                                                    not null
@@ -11,6 +12,7 @@ create table icca_audits(
   , activate            varchar2(1)   default 'Y'                                 not null  
   , audit_completed     varchar2(1)   default 'N'                                 not null
   , signature_image_id  number
+  , migrated_data       varchar2(1 char) default 'N'                            not null
   , created_date        date          default sysdate                             not null
   , created_by          varchar2(50)                                              not null
   , modified_date       date          

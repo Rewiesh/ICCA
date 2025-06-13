@@ -6,12 +6,13 @@ create table icca_users(
     ,   email           varchar2(100)
     ,   ugp_id          number                                                  not null
     ,   bch_id          number                                                  not null
-    ,   active          varchar2(1)   default 'Y'                               not null                              
-    ,   created_date    date          default sysdate                           not null
+    ,   active          varchar2(1)         default 'Y'                         not null   
+    ,   deleted         varchar2(1 char)    default 'N'                         not null
+    ,   migrated_data   varchar2(1 char)    default 'N'                         not null                           
+    ,   created_date    date                default sysdate                     not null
     ,   created_by      varchar2(50)                                            not null
     ,   modified_date   date          
     ,   modified_by     varchar2(50)
-    ,   deleted         varchar2(1 char)               default 'N'              not null
 );
 
 alter table icca_users add constraint icca_usr_pk primary key (id);
@@ -20,3 +21,5 @@ alter table icca_users add constraint icca_usr_bch_fk2 foreign key (bch_id) refe
 -- indexes
 create unique index icca_usr_username_uk_idx1 on icca_users (upper(username));
 -- create unique index icca_usr_email_uk_idx2 on icca_users (upper(email)); -- dropped (email niet unqiue)
+
+-- alter table icca_users add migrated_data varchar2(1 char) default 'N' not null;

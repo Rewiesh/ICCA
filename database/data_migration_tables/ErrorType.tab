@@ -1,0 +1,8 @@
+CREATE TABLE ErrorType (
+  ErrorTypeId RAW(20) NOT NULL,
+  ErrorTypeValue varchar2(1000) NOT NULL,
+  SortOrder NUMBER NOT NULL,
+  ErrorCategoryId NUMBER NOT NULL,
+  ErrorKindId NUMBER NOT NULL,
+  ete_id number
+);

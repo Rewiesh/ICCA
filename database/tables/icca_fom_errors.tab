@@ -9,6 +9,7 @@ create table icca_fom_errors(
     ,   technical_aspects_remark    varchar2(4000)
     ,   log_book_image_id           number
     ,   technical_aspects_image_id  number
+    ,   migrated_data               varchar2(1 char) default 'N'                            not null
     ,   created_date                date          default sysdate                           not null
     ,   created_by                  varchar2(50)                                            not null
     ,   modified_date               date

@@ -5,6 +5,7 @@ create table icca_cat_buildingsize_scales(
     ,   min_sample_size number
     ,   max_val         number
     ,   max_sample_size number
+    ,   migrated_data   varchar2(1 char) default 'N'                            not null
     ,   created_date    date          default sysdate                           not null
     ,   created_by      varchar2(50)                                            not null
     ,   modified_date   date          

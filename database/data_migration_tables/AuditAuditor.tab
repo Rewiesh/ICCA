@@ -1,0 +1,5 @@
+CREATE TABLE auditauditor (
+  auditorid RAW(20) NOT NULL,
+  auditid RAW(20) NOT NULL,
+  apr_id number
+);

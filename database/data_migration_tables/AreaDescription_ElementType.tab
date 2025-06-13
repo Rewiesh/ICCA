@@ -1,0 +1,6 @@
+CREATE TABLE AreaDescription_ElementType (
+    AreaDescId NUMBER NOT NULL,
+    AreaDescModuleId NUMBER NOT NULL,
+    ElementTypeId RAW(20) NOT NULL,
+    era_id number
+);

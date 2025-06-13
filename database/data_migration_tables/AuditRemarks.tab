@@ -1,0 +1,7 @@
+CREATE TABLE auditremarks (
+    id            RAW(20)           NOT NULL,  -- UUID opgeslagen als RAW(20)
+    auditid       RAW(20)           NOT NULL,
+    remarktext    varchar2(4000),
+    remarkimage   RAW(20),
+    formid        RAW(20),
+);

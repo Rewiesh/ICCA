@@ -1,0 +1,9 @@
+CREATE TABLE ConstantSizeCategory (
+    id                RAW(20)       NOT NULL,
+    category_id       RAW(20),
+    building_size_scale_id RAW(20),
+    minimun_size_range NUMBER,
+    maximun_size_range NUMBER,
+    approved_limit     NUMBER,
+    clm_id            NUMBER
+);

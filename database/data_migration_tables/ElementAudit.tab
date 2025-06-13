@@ -1,0 +1,7 @@
+CREATE TABLE elementaudit (
+    idelement RAW(20) NOT NULL,
+    idaudit RAW(20) NOT NULL,
+    elementauditstatus RAW(20) NOT NULL,
+    elementauditcomment varchar2(4000) NULL,
+    ant_id number
+);

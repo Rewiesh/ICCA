@@ -1,0 +1,19 @@
+CREATE TABLE forms (
+    id               RAW(20)          NOT NULL, -- uniqueidentifier wordt RAW(20) met HEXTORAW
+    counterelement   NUMBER           NOT NULL,
+    date_            TIMESTAMP        NULL,     -- 'Date' is reserved in Oracle, dus underscore toegevoegd
+    presentclient    varchar2(4000)             NULL,
+    approvedlimits   NUMBER           NOT NULL,
+    areacode        varchar2(4000)             NULL,
+    faults          NUMBER           NULL,
+    comments        varchar2(4000)             NULL,
+    auditid         RAW(20)          NOT NULL,
+    categoryid      RAW(20)          NOT NULL,
+    floorid         RAW(20)          NOT NULL,
+    auditby_id      RAW(20)          NULL,
+    uploaded        NUMBER(1)        NULL,     -- Oracle heeft geen BIT, dus NUMBER(1) als alternatief
+    remarks         varchar2(4000)             NULL,
+    areadescid      NUMBER           NULL,
+    areadescmoduleid NUMBER          NULL,
+    fom_id number
+);

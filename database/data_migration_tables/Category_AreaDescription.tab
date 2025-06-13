@@ -1,0 +1,6 @@
+CREATE TABLE Category_AreaDescription (
+    CategoryId        RAW(20) NOT NULL,
+    AreaDescId        NUMBER   NOT NULL,
+    AreaDescModuleId  NUMBER   NOT NULL,
+    aat_id number
+);

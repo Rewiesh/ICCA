@@ -1,0 +1,12 @@
+CREATE TABLE formerrorelement (
+    errorelementid        RAW(20)           NOT NULL PRIMARY KEY,
+    formid                RAW(20),
+    errortypeid           RAW(20),
+    elementid             RAW(20),
+    logbook               VARCHAR2(4000),
+    technicalaspects      VARCHAR2(4000),
+    logbookimage          RAW(20),
+    technicalaspectsimage RAW(20),
+    count                 NUMBER(10)        NOT NULL,
+    for_ID NUMBER
+);

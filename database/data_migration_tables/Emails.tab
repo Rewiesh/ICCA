@@ -1,0 +1,10 @@
+CREATE TABLE emails (
+    user_id           RAW(20)         NOT NULL,
+    email_address     VARCHAR2(100)   NOT NULL,
+    ordinal           NUMBER(10)      NOT NULL,
+    verified          NUMBER(1),      -- nullable boolean (1=TRUE, 0=FALSE)
+    date_l             DATE            NOT NULL,
+    verification_code RAW(20),        -- nullable UUID
+    having_problems   NUMBER(1),
+    eml_id     number
+);

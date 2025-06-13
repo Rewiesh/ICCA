@@ -1,0 +1,18 @@
+CREATE TABLE audits (
+    auditcode           NUMBER(19)           NOT NULL,
+    date1               DATE                 NOT NULL,
+    isactive            NUMBER(1)            DEFAULT 0 NOT NULL,
+    isdone              NUMBER(1),
+    id                  RAW(20)              NOT NULL,
+    type                NVARCHAR2(10),
+    nameclient_id       RAW(20)              NOT NULL,
+    locationclient_id   RAW(20)              NOT NULL,
+    presentclient       varchar2(4000),
+    attn                varchar2(4000),
+    week                NUMBER(10),
+    lastcontroldate     DATE,
+    activate            NUMBER(1)            DEFAULT 0 NOT NULL,
+    locationmanagersignimage RAW(50),
+    audithash           varchar2(4000),
+    adt_id number
+);
