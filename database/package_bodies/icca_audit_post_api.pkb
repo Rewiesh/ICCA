@@ -371,7 +371,8 @@ is
             ;
         --
         -- variables
-        lr_fom icca_adt_forms%rowtype;
+        lr_fom                  icca_adt_forms%rowtype;
+        ln_fom_tot_error_count  number := 0;
     begin
         --
         for i in 1..p_forms.count
@@ -447,11 +448,114 @@ is
                                 ,   dest.technical_aspects_image_id = src.technical_aspects_image_id
                 ;
                 --
+                -- tel de errors op
+                ln_fom_tot_error_count := ln_fom_tot_error_count + p_forms(i).error(y).error_count;
             end loop;
             --
+            -- update de form met het totaal aantal errors
+            update  icca_adt_forms
+            set     error_count = ln_fom_tot_error_count
+            where   id = lr_fom.id
+            ;
+            -- reset de error count voor de volgende form
+            ln_fom_tot_error_count := 0;
         end loop;
         --
     end p_create_audit_forms;
+    --
+    -----------------------------------------------------------------------------------------
+    --  bereken de audit resultaten
+    procedure p_calculate_audit_results( p_adt_id in number )
+    is
+        -- cursors
+        cursor c_get_audit_results( b_adt_id in number )
+        is
+            select  fom.adt_id              as adt_id
+            ,       fom.cat_id              as cat_id
+            ,       sum(fom.element_count)  as counter_elements
+            ,       sum(fom.error_count)    as counter_errors
+            from    icca_adt_forms fom
+            where   fom.adt_id = b_adt_id
+            group by adt_id
+                   , cat_id
+            ;
+        --
+        cursor c_get_audit_score( b_audit_ratio in number )
+        is
+            select  score
+            from    (
+                        select  score
+                        ,       fault_perc
+                        from    icca_scores
+                        where   fault_perc <= b_audit_ratio
+                        order by fault_perc desc
+                    )
+            where rownum = 1;
+        --
+        -- variables
+        type t_audit_results is table of c_get_audit_results%rowtype index by pls_integer;
+        lt_audit_results            t_audit_results;
+        ln_approve_limit            number := 0;
+        ln_audit_score_ratio        number := 0;
+        ln_audit_score              number := 0;
+        ln_default_approve_limit    number := 6; -- default goedkeurings limiet
+    begin
+        --
+        -- haal de audit resultaten op
+        open    c_get_audit_results( b_adt_id => p_adt_id );
+        fetch   c_get_audit_results
+        bulk collect into lt_audit_results;
+        close   c_get_audit_results;
+        --
+        -- loop door de resultaten heen
+        for i in 1 .. lt_audit_results.count
+        loop
+            --
+            -- bepaal de goedkeurings limiet
+            ln_approve_limit        := 50;--p_get_audit_approve_limit( p_adt_id );      => nog antwoord krijgen van anjali hoe dit te bepalen
+            --
+            -- Ratio van fouten tot elementen
+            ln_audit_score_ratio := ( ln_approve_limit 
+                                      / case 
+                                          when lt_audit_results(i).counter_errors > 0 then lt_audit_results(i).counter_errors
+                                          else 1
+                                        end  
+                                    ) * 100;
+            --
+            -- get de audit score op basis van de ratio
+            open    c_get_audit_score( b_audit_ratio => ln_audit_score_ratio );
+            fetch   c_get_audit_score 
+            into    ln_audit_score;
+            close   c_get_audit_score;
+            --
+            -- insert de resultaten in de audit resultaten tabel
+            merge into icca_adt_results dest
+                using ( select  lt_audit_results(i).adt_id                                                  as adt_id
+                        ,       lt_audit_results(i).cat_id                                                  as cat_id
+                        ,       ln_approve_limit                                                            as approve_limit
+                        ,       lt_audit_results(i).counter_elements                                        as counter_elements
+                        ,       lt_audit_results(i).counter_errors                                          as counter_errors
+                        ,       ln_audit_score                                                              as score
+                        ,       case when ln_audit_score >= ln_default_approve_limit then 'Y' else 'N' end  as is_sufficient
+                        from    dual
+                    ) src
+                on (    dest.adt_id = src.adt_id
+                    and dest.cat_id = src.cat_id
+                    )
+            when not matched
+                then insert ( dest.adt_id, dest.cat_id, dest.approve_limit, dest.counter_elements, dest.counter_errors, dest.score, dest.is_sufficient )
+                        values ( src.adt_id, src.cat_id, src.approve_limit, src.counter_elements, src.counter_errors, src.score, src.is_sufficient )
+            when matched
+                then update set dest.approve_limit     = src.approve_limit
+                            ,   dest.counter_elements  = src.counter_elements
+                            ,   dest.counter_errors    = src.counter_errors
+                            ,   dest.score             = src.score
+                            ,   dest.is_sufficient     = src.is_sufficient
+            ;
+            --
+        end loop;
+        --
+    end p_calculate_audit_results;
     --
     -----------------------------------------------------------------------------------------
     --  process de ingekomen audit gegevens    
@@ -482,6 +586,9 @@ is
                             ,   p_pfr_id => p_pfr_id
                             ,   p_forms  => p_audit.forms
                             );
+        --
+        -- bereken de audit resultaten
+        p_calculate_audit_results( p_adt_id => ln_adt_id );
         --
     end p_process_audit;
     --

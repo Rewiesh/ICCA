@@ -1,0 +1,5 @@
+CREATE TABLE ratingvalue (
+    ratingvalue NUMBER,
+    id RAW(20) NOT NULL,
+    sce_id number
+);
