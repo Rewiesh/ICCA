@@ -480,6 +480,20 @@ is
                    , cat_id
             ;
         --
+        cursor c_get_category_limits(   b_cat_id            in number
+                                    ,   b_counter_elements  in number
+                                    )
+        is
+            select  clm.approve_limit   as cat_approve_limit
+            ,       clm.min_size_range  as cat_min_size_range
+            from    icca_categories               cat
+            join    icca_cat_limits               clm on clm.cat_id = cat.id
+            join    icca_cat_buildingsize_scales  cbe on clm.cbe_id = cbe.id
+            where   cat_id = b_cat_id
+            and     b_counter_elements between cbe.min_val and cbe.max_val
+            fetch first 1 rows only
+            ;
+        --
         cursor c_get_audit_score( b_audit_ratio in number )
         is
             select  score
@@ -495,6 +509,8 @@ is
         -- variables
         type t_audit_results is table of c_get_audit_results%rowtype index by pls_integer;
         lt_audit_results            t_audit_results;
+        ln_cat_approve_limit        number := 0;
+        ln_cat_min_size_range       number := 0;
         ln_approve_limit            number := 0;
         ln_audit_score_ratio        number := 0;
         ln_audit_score              number := 0;
@@ -511,8 +527,23 @@ is
         for i in 1 .. lt_audit_results.count
         loop
             --
+            -- haal de categorie goedkeurings limiet op
+            open    c_get_category_limits(  b_cat_id            => lt_audit_results(i).cat_id
+                                        ,   b_counter_elements  => lt_audit_results(i).counter_elements
+                                        );
+            fetch   c_get_category_limits
+            into    ln_cat_approve_limit, ln_cat_min_size_range;
+            close   c_get_category_limits;
+            --                                        
             -- bepaal de goedkeurings limiet
-            ln_approve_limit        := 50;--p_get_audit_approve_limit( p_adt_id );      => nog antwoord krijgen van anjali hoe dit te bepalen
+            -- ( ln_cat_approve_limit / ln_cat_min_size_range ) * lt_audit_results(i).counter_elements
+            ln_approve_limit        := ceil(( ln_cat_approve_limit 
+                                                / case 
+                                                    when ln_cat_min_size_range > 0 then ln_cat_min_size_range
+                                                    else 1
+                                                  end  
+                                            ) * lt_audit_results(i).counter_elements
+                                        );
             --
             -- Ratio van fouten tot elementen
             ln_audit_score_ratio := ( ln_approve_limit 
