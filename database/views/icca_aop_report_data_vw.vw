@@ -35,79 +35,43 @@ w_column_chart
 as(
     select  ars.adt_id
     ,       json_object(
-                 'type'      value 'multiple'
-             ,   'options'   value  json_array(
+                 'title'      value ''
+             ,   'xAxis'   value  json_array(
                      json_object(
-                              'width'   value 300
-                         ,    'height'  value 200
-                         ,    'grid'    value false
-                         ,    'border'  value false
-                         ,    'legend'  value json_object(
-                                  'showLegend' value true
-                                , 'position'   value 'b'
+                          'title'   value 'XAxis'
+                      ,    'data'    value json_arrayagg(
+                              json_object(
+                                      'value' value cat.name
                               )
-                        -- * when data labels is on it applies to both the column and the linechart!!!
-                        --  ,    'dataLabels'  value json_object(
-                        --           'showDataLabels' value true
-                        --         , 'showValue' value false
-                        --         , 'position'   value 'above'
-                        --       )
-                         ,    'axis'    value json_object(
-                                  'x'     value json_object(
-                                        'majorGridlines' value false
-                                      , 'minorGridlines' value false
-                                    )
-                                , 'y'     value json_object(
-                                       'majorGridlines' value false
-                                     , 'minorGridlines' value false
-                                     , 'minorUnit' value 1000
-                                     , 'showValues' value true
-                                     , 'formatCode' value 'General'
-                                   )
-                            )
-                     )
-                 )
-             ,      'multiples' value json_array(
-                      json_object(
-                            'type' value 'column'
-                        ,   'columns' value json_array(
+                          )
+                    )
+                )
+             ,   'yAxis'   value  json_array(
+                     json_object(
+                          'title'   value 'Ytitle'
+                        , 'series'  value json_array(
                                 json_object(
-                                        'name'  value 'cijfer'
-                                    ,   'color' value '#D9D71C'
-                                    ,   'showDataLabels' value true
-                                    ,   'data'  value (
-                                            json_arrayagg(
-                                                    json_object(
-                                                            'x' value cat.name
-                                                        ,   'y' value ars.score
-                                                    )
-                                                )
+                                      'name' value 'Cijfer'
+                                  ,    'data'    value json_arrayagg(
+                                            json_object(
+                                                    'value' value ars.score
                                             )
+                                        )
                                 )
-                            )
-                      )
-                ,
-                      json_object(
-                            'type' value 'line'
-                        ,   'lines' value json_array(
+                            ,
                                 json_object(
-                                        'name'  value 'goedkeurgrens'
-                                    ,   'color' value '#458FA6'
-                                    ,   'data'  value (
-                                            json_arrayagg(
-                                                    json_object(
-                                                            'label' value cat.name
-                                                        ,   'x' value cat.name
-                                                        ,   'y' value 6
-                                                    )
-                                                )
+                                      'name' value 'Goedkeurgrens'
+                                  ,    'data'    value json_arrayagg(
+                                            json_object(
+                                                    'value' value 6
                                             )
+                                        )
                                 )
-                            )
+                          )
                       )
-
-                  )
-             )    as chart_spec
+                )
+            )
+             as chart_spec
     from    icca_adt_results    ars
     join    icca_categories     cat on ars.cat_id = cat.id
     group by ars.adt_id
@@ -135,7 +99,7 @@ select  json_array(
                                   ,   'audit_stad'                value adt.audit_stad
                                   ,   'audit_straatnaam'          value adt.audit_straatnaam
                                 ------------------------------ Chart Data -------------------------------------
-                                    ,   'chart'                 value json_array(cch.chart_spec)
+                                    ,   'columnLineChart'         value json_array(cch.chart_spec)
 
                                 )
                             )
