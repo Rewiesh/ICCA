@@ -31,17 +31,28 @@ with w_pfr as(
     where   adt.audit_completed = 'Y'
 ) --select * from w_adt;
 ,
+w_adt_results
+as(
+  select  /*+ MATERIALIZE*/
+          ars.adt_id          adt_id
+  ,       ars.score           ars_score
+  ,       ars.approve_limit   ars_approve_limit
+  ,       cat.name            cat_name
+  from    icca_adt_results    ars
+  join    icca_categories     cat on ars.cat_id = cat.id
+)
+,
 w_column_chart
 as(
     select  ars.adt_id
     ,       json_object(
-                 'title'      value ''
+                 'title'      value 'Chart Title'
              ,   'xAxis'   value  json_array(
                      json_object(
-                          'title'   value 'XAxis'
+                          'title'   value 'xAxis'
                       ,    'data'    value json_arrayagg(
                               json_object(
-                                      'value' value cat.name
+                                      'value' value ars.cat_name
                               )
                           )
                     )
@@ -54,7 +65,7 @@ as(
                                       'name' value 'Cijfer'
                                   ,    'data'    value json_arrayagg(
                                             json_object(
-                                                    'value' value ars.score
+                                                    'value' value ars.ars_score
                                             )
                                         )
                                 )
@@ -63,7 +74,7 @@ as(
                                       'name' value 'Goedkeurgrens'
                                   ,    'data'    value json_arrayagg(
                                             json_object(
-                                                    'value' value 6
+                                                    'value' value ars.ars_approve_limit
                                             )
                                         )
                                 )
@@ -72,10 +83,55 @@ as(
                 )
             )
              as chart_spec
-    from    icca_adt_results    ars
-    join    icca_categories     cat on ars.cat_id = cat.id
-    group by ars.adt_id
+    from    w_adt_results ars
+    group by adt_id
 )
+-- ,
+-- w_timeline_chart
+-- as
+-- (
+--     select  ars.adt_id
+--     ,       json_object(
+--                  'title'   value 'Test'
+--              ,   'xAxis'   value  json_array(
+--                      json_object(
+--                           'title'   value 'XAxis'
+--                       ,    'data'    value json_arrayagg(
+--                               json_object(
+--                                       'value' value ars.cat_name
+--                               )
+--                           )
+--                     )
+--                 )
+--              ,   'yAxis'   value  json_array(
+--                      json_object(
+--                           'title'   value 'Ytitle'
+--                         , 'series'  value json_array(
+--                                 json_object(
+--                                       'name' value 'Cijfer'
+--                                   ,    'data'    value json_arrayagg(
+--                                             json_object(
+--                                                     'value' value ars.ars_score
+--                                             )
+--                                         )
+--                                 )
+--                             ,
+--                                 json_object(
+--                                       'name' value 'Goedkeurgrens'
+--                                   ,    'data'    value json_arrayagg(
+--                                             json_object(
+--                                                     'value' value ars.ars_approve_limit
+--                                             )
+--                                         )
+--                                 )
+--                           )
+--                       )
+--                 )
+--             )
+--              as chart_spec
+--     from    w_adt_results ars
+--     group by adt_id
+-- )
 select  json_array(
             json_object(
                     'filename' value 'rapport'
@@ -99,7 +155,8 @@ select  json_array(
                                   ,   'audit_stad'                value adt.audit_stad
                                   ,   'audit_straatnaam'          value adt.audit_straatnaam
                                 ------------------------------ Chart Data -------------------------------------
-                                    ,   'columnLineChart'         value json_array(cch.chart_spec)
+                                    ,   'colChart'         value json_array(cch.chart_spec)
+                                    -- ,   'stockChart'         value json_array(cch.chart_spec)
 
                                 )
                             )
@@ -109,5 +166,4 @@ from w_adt          adt
 join w_column_chart cch on adt.adt_id = cch.adt_id
 where  adt.adt_id = 7642
 ;
-
 
