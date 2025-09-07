@@ -33,7 +33,8 @@ is
         lt_docs tt_docs;
 
         lc_html                     clob;
-        lv_const_col_cnt constant   number := 3;
+        ln_const_col_cnt constant   number := 3;
+        ln_row_space_height         number;
 
         lv_img_based64 clob := 'iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAqFBMVEX////wwADx
 wAD/xgD+xgD9xQD1wgDvvwD7xADzwQD6xAD2wgD8xQD0wQD3wwD4wwDywAD+xQDy
@@ -117,59 +118,74 @@ XGL6hA+iAAAAAElFTkSuQmCC';
             return null;
         end if;
 
-        /* Create main table */
+        /* Create main table, which we will start appending to in loop */
         lc_html := '<table style="width: 100%; text-align: center; border-collapse: separate; border-spacing: 40px 10px;">';
-        for i in 1..lt_docs.count by lv_const_col_cnt loop
 
-          dbms_lob.append(lc_html, '<thead><tr style="padding:10px 30px;">');
+        for i in 1..lt_docs.count by ln_const_col_cnt loop
 
-            for j in i..least(i + lv_const_col_cnt  - 1, lt_docs.count) loop
+          dbms_lob.append(lc_html, '<tr>');
+
+            -- Header Text(and styling)
+            for j in i..least(i + ln_const_col_cnt  - 1, lt_docs.count) loop
                dbms_lob.append(lc_html,
-                            '<th style="padding: 10px; border:1px solid red;">'
-                            -- '<th style="padding: 10px; border:none;">'
-                        ||      '<b>Foto' || lt_docs(j).rn ||'</b>'
+                            '<th style="padding: 5px; border-top:1px solid #696969; border-left:1px solid #696969; border-right:1px solid #696969; border-bottom:none;">'
+                        ||      '<b>Foto ' || lt_docs(j).rn ||'</b>'
                         ||  '</th>'
                )
                         ;
-                -- Append empty table headers for spacing, note that this is done between the 1st, 2nd and 3rd image
-                if j < least(i + lv_const_col_cnt - 1, lt_docs.count) then
-                    dbms_lob.append(lc_html,
-                                '<th style="width:20px; border:none;"></th>'
-                                    );
+                -- Append empty table headers for spacing between header columns, note that this is NOT done before 1st header and after 3rd header
+                if j < least(i + ln_const_col_cnt - 1, lt_docs.count) then
+                    dbms_lob.append(lc_html, '<th style="width:40px; border:none;"></th>');
                 end if;
 
             end loop;
 
-            dbms_lob.append(lc_html,  '</tr></thead>');
-            -- dbms_lob.append(lc_html, '</tr><tr><td colspan="'|| to_char((lv_const_col_cnt*2-1)) ||'" style="height:20px; border:1px solid blue;"></td></tr></thead>');
+            -- Close row
+            dbms_lob.append(lc_html,  '</tr>');
 
+            -- Start row for images
+            lc_html := lc_html || '<tr>';
 
-            -- -- Start tbody for this group
-            lc_html := lc_html || '<tbody><tr>';
-
-            -- Add images for this group
-            for k in i..least(i + lv_const_col_cnt - 1, lt_docs.count) loop
+            /*
+                Add images for this group
+                Might need to play around with width and height depending on if horizontal / vertical images
+            */
+            for k in i..least(i + ln_const_col_cnt - 1, lt_docs.count) loop
                 dbms_lob.append(lc_html,
-                    --    '<td style="width:200px; height:300px; border:3px solid green; vertical-align:middle;">'
-                    '<td style="width:300px; height:400px; border:none;">'
-                    || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || lt_docs(k).img_data || '" ' --* actual image
+                    '<td style="width:8cm; height:10cm; border:1px solid #dfd81d; vertical-align:middle;">'
+                    -- || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || lt_docs(k).img_data || '" ' --* actual image
                     -- || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || 'lv_img_based64' || '" ' --* for logging html
-                    -- || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || lv_img_based64 || '" '   --* for testing img ==> SR LOGO
-                    || 'style="width:auto; height:auto; object-fit:contain; display:block;">'
+                    || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || lv_img_based64 || '" '   --* for testing img
+                    || 'style="width:auto; height:auto; object-fit:contain; display:block; border: 1px solid #dfd81d;">'
                     || '</td>'
                 );
 
-                -- Append empty table headers for spacing, note that this is done between the 1st, 2nd and 3rd image
-                if k < least(i + lv_const_col_cnt - 1, lt_docs.count) then
-                    dbms_lob.append(lc_html,
-                                -- '<td style="border:1px solid blue"></td>'
-                                '<td style="border:none"></td>'
-                                    );
+                -- Append empty table headers for spacing between image columns, note that this is NOT done before 1st image and after 3rd image
+                if k < least(i + ln_const_col_cnt - 1, lt_docs.count) then
+                    dbms_lob.append(lc_html, '<td style="border:none"></td>');
                 end if;
             end loop;
 
-            dbms_lob.append(lc_html, '<tr style="height:100px; border:2px solid yellow;><td colspan="'|| to_char((lv_const_col_cnt*2-1)) ||'" style="height:10px; border:1px solid blue;"></td></tr>');
-            dbms_lob.append(lc_html, '</tr></tbody>');
+            dbms_lob.append(lc_html, '</tr>');
+
+            /*
+                Calculation for divider width between rows.
+                If width between 2 rows is set too small, header appears on one page and then image on another,
+                which is also why this is done conditionally as we do not want spacing between rows on one page to be too large
+            */
+            if  mod(lt_docs(i).row_num, 2) = 0  then
+                ln_row_space_height := case
+                                            when lt_docs(i).row_num > 2 then 220 --* space when moving from page 2+ to next page
+                                            else 193                             --* space when moving from page 1 to 2
+                                        end;
+            else
+                ln_row_space_height := 100; --*  between 2 rows on one page
+            end if;
+
+
+            -- Divider between rows
+            dbms_lob.append(lc_html, '<tr style="height:' || ln_row_space_height ||'px; border:1px solid blue";><td colspan="'|| to_char((ln_const_col_cnt*2-1)) ||'" style="height:10px; border:1px solid blue;"></td></tr>');
+            --
         end loop;
 
        dbms_lob.append(lc_html, '</table>');
