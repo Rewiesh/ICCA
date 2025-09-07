@@ -91,7 +91,8 @@ with
     ,           frs.log_book_remark                                                             log_book_remark
     ,           case when log_book_image_id is not null then
                     row_number() over (partition by fom.adt_id order by log_book_image_id) end  picture_number
-    from        icca_adt_forms fom
+    ,           doc.id                                                                          doc_id
+    from        w_fom fom
     join        icca_floors         flr on fom.flr_id            = flr.id
     join        icca_areas          ara on fom.ara_id            = ara.id
     join        icca_categories     cat on fom.cat_id            = cat.id
@@ -259,6 +260,7 @@ as
 as
 (
     select  adt_id      adt_id
+    ,       listagg(doc_id, ',') within group(order by doc_id) as doc_ids
     ,       json_arrayagg(
                     json_object(
                             'ruimte_nr' value area_number
@@ -267,12 +269,12 @@ as
                         ,   'vuilsoort' value ete_name
                         ,   'opmerking' value log_book_remark
                         ,   'foto_nr'   value picture_number
-                        )
-    order by picture_number asc ) as tbl_spec
+                        returning clob )
+                order by picture_number asc
+                returning clob
+            ) as tbl_spec
     from        w_fom_detail
     group by adt_id
-
-
 )
 select  json_array(
             json_object(
@@ -303,18 +305,22 @@ select  json_array(
                                 ------------------------------ * Table Data *  -------------------------------------
                                   ,   'audit_results'                value ars_tbl.tbl_spec
                                   ,   'ruimteniveau_opmerkingen'     value rlc_tbl.tbl_spec
+                                  ,   'ruimteniveau_opmerkingen_distribute' value true
+                                  ------------------------------------------------------------------------
+                                  ,   'htmlContent_use_tag_style'               value true
+                                  ,   'htmlbettercontent_ignore_cell_margin'    value true
                                 )
                             )
                 )
-         )as aop_data
+         returning clob)as aop_data
 ,       adt.adt_id adt_id
+,       rlc_tbl.doc_ids
 from w_adt              adt
 join w_column_chart     cch on adt.adt_id = cch.adt_id
 join w_stock_chart      sch on adt.adt_id = sch.adt_id
 -- join w_timeline_chart   tch on adt.adt_id = tch.main_adt_id
 join    w_audit_results_tbl         ars_tbl on ars_tbl.adt_id = adt.adt_id
 join    w_room_level_comments_tbl   rlc_tbl on rlc_tbl.adt_id = adt.adt_id
--- cross join w_stock_chart sch
--- where  adt.adt_id = 279
+
 ;
 
