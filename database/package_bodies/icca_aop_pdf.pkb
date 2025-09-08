@@ -21,7 +21,8 @@ is
                 )
             )
            ,    w_img_rows as (
-                    select  ceil(rn / 3)as row_num
+                    select  ceil(rn / 3)                as row_num
+                    ,       max(ceil(rn / 3)) over()    as max_row_num
                     ,       rn
                     ,       mime_type
                     ,       img_data
@@ -153,9 +154,9 @@ XGL6hA+iAAAAAElFTkSuQmCC';
             for k in i..least(i + ln_const_col_cnt - 1, lt_docs.count) loop
                 dbms_lob.append(lc_html,
                     '<td style="width:8cm; height:10cm; border:1px solid #dfd81d; vertical-align:middle;">'
-                    -- || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || lt_docs(k).img_data || '" ' --* actual image
+                    || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || lt_docs(k).img_data || '" ' --* actual image
                     -- || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || 'lv_img_based64' || '" ' --* for logging html
-                    || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || lv_img_based64 || '" '   --* for testing img
+                    -- || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || lv_img_based64 || '" '   --* for testing img
                     || 'style="width:auto; height:auto; object-fit:contain; display:block; border: 1px solid #dfd81d;">'
                     || '</td>'
                 );
@@ -173,22 +174,41 @@ XGL6hA+iAAAAAElFTkSuQmCC';
                 If width between 2 rows is set too small, header appears on one page and then image on another,
                 which is also why this is done conditionally as we do not want spacing between rows on one page to be too large
             */
+            dbms_output.put_line('count => ' || lt_docs(i).row_num || ' total count => ' || lt_docs.count);
             if  mod(lt_docs(i).row_num, 2) = 0  then
                 ln_row_space_height := case
-                                            when lt_docs(i).row_num > 2 then 220 --* space when moving from page 2+ to next page
-                                            else 193                             --* space when moving from page 1 to 2
+                                            when lt_docs(i).row_num > 2 then
+                                                case
+                                                    when lt_docs(i).row_num = lt_docs(i).max_row_num then 275   --* space when moving from page 2+ to next page and LAST PAGE
+                                                    else 260 end                                                --* space when moving from page 2+ to next page and NOT LAST PAGE
+                                            else
+                                                case
+                                                    when lt_docs(i).row_num = lt_docs(i).max_row_num then 230  --* space when moving from page 1 to 2 and LAST PAGE
+                                                    else 220 end                                               --* space when moving from page 1 to 2 and NOT LAST PAGE
                                         end;
             else
-                ln_row_space_height := 100; --*  between 2 rows on one page
+                ln_row_space_height := case when lt_docs(i).row_num = lt_docs(i).max_row_num then 0 else 100 end; --*  between 2 rows on one page
+            end if;
+
+            -- Divider between rows
+            dbms_lob.append(lc_html, '<tr style="height:' || ln_row_space_height ||'px; border:none";><td colspan="'|| to_char((ln_const_col_cnt*2-1)) ||'" style="height:10px; border:none;"></td></tr>');
+            --
+
+            -- * append extra table row for spacing except on the last row
+            if  mod(lt_docs(i).row_num, 2) = 0 and not lt_docs(i).row_num = lt_docs(i).max_row_num
+            then
+                dbms_lob.append(lc_html, '<tr style="height:' || '30px' ||'px; border:none";><td colspan="'|| to_char((ln_const_col_cnt*2-1)) ||'" style="height:10px; border:none;"></td></tr>');
+            elsif mod(lt_docs(i).row_num, 2) = 0 and lt_docs(i).row_num = lt_docs(i).max_row_num
+            then
+                dbms_lob.append(lc_html, '<tr style="height:' || '7px' ||'px; border:none";><td colspan="'|| to_char((ln_const_col_cnt*2-1)) ||'" style="height:10px; border:none;"></td></tr>');
             end if;
 
 
-            -- Divider between rows
-            dbms_lob.append(lc_html, '<tr style="height:' || ln_row_space_height ||'px; border:1px solid blue";><td colspan="'|| to_char((ln_const_col_cnt*2-1)) ||'" style="height:10px; border:1px solid blue;"></td></tr>');
-            --
+
         end loop;
 
        dbms_lob.append(lc_html, '</table>');
+        -- dbms_lob.append(lc_html, '<p style="font-size:18pt; padding-top:0; margin:0; font-weight:bold; margin:0;">algemene opmerkingen</p>');
 
 
 
