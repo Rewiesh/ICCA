@@ -5,7 +5,7 @@ is
     function f_get_imgs_html(p_doc_ids varchar2, p_duplicate_number number default null)
     return clob
     is
-        cursor c_get_docs(b_doc_ids varchar2)
+        cursor c_get_docs(b_doc_ids varchar2, b_row_size number)
         is
             with w_img_data as(
                 select  apex_web_service.blob2clobbase64(image_data) as img_data
@@ -24,8 +24,8 @@ is
                 )
             )
            ,    w_img_rows as (
-                    select  ceil(rn / 3)                as row_num
-                    ,       max(ceil(rn / 3)) over()    as max_row_num
+                    select  ceil(rn / b_row_size )                as row_num
+                    ,       max(ceil(rn / b_row_size )) over()    as max_row_num
                     ,       rn
                     ,       mime_type
                     ,       img_data
@@ -95,31 +95,33 @@ XGL6hA+iAAAAAElFTkSuQmCC';
         "horizontal": {
             "row_spacing": {
                 "even": {
-                    "first_page": { "last": 190, "not_last": 190 },
-                    "other_pages": { "last": 240, "not_last": 220 }
+                    "first_page": { "last": 190, "not_last": 230 },
+                    "other_pages": { "last": 300, "not_last": 280 }
                 },
-                "odd": { "last": 0, "not_last": 25 }
+                "odd": { "last": 0, "not_last": 50 }
             },
-            "extra_spacing": { "last": 5, "not_last": 28 },
-            "cell_dimensions": [500, 370],
-            "image_dimensions": [500, 370]
+            "extra_spacing": { "last": 6, "not_last": 28 },
+            "cell_dimensions": ['370px', '270px'],
+            "under_three_cell_dimensions": ['270px', '170px'],
+            "image_dimensions": ['auto', 'auto']
         },
         "vertical": {
             "row_spacing": {
                 "even": {
-                    "first_page": { "last": 10, "not_last": 10 },
+                    "first_page": { "last": 0, "not_last": 0 },
                     "other_pages": { "last": 60, "not_last": 40 }
                 },
-                "odd": { "last": 0, "not_last": 10 }
+                "odd": { "last": 0, "not_last": 0 }
             },
-            "extra_spacing": { "last": 5, "not_last": 28 },
-            "cell_dimensions" : [1080, 1920],
-            "image_dimensions" : [270, 370]
+            "extra_spacing": { "last": 0, "not_last": 0 },
+            "cell_dimensions" : ['1080px', '1920px'],
+            "under_three_cell_dimensions": ['980px', '1820px'],
+            "image_dimensions" : ['270px', '370px']
             }
     }
     ]');
 
-    lv_const_orientation_mode constant varchar2(10) := 'HORIZONTAL';
+    lv_const_orientation_mode constant varchar2(10) := 'VERTICAL';
 
     --row spacing - even
     ln_even_first_page_last      number := lv_const_spacing_params.get_object(lower(lv_const_orientation_mode)).get_object('row_spacing').get_object('even').get_object('first_page').get_number('last');
@@ -136,12 +138,16 @@ XGL6hA+iAAAAAElFTkSuQmCC';
     ln_extra_not_last       number := lv_const_spacing_params.get_object(lower(lv_const_orientation_mode)).get_object('extra_spacing').get_number('not_last');
 
     -- Cell size
-    ln_cell_width            varchar2(100) := lv_const_spacing_params.get_object(lower(lv_const_orientation_mode)).get_Array('cell_dimensions').get_Number(0);
-    ln_cell_height           varchar2(100) := lv_const_spacing_params.get_object(lower(lv_const_orientation_mode)).get_Array('cell_dimensions').get_Number(1);
+    ln_cell_width            varchar2(100) := lv_const_spacing_params.get_object(lower(lv_const_orientation_mode)).get_Array('cell_dimensions').get_string(0);
+    ln_cell_height           varchar2(100) := lv_const_spacing_params.get_object(lower(lv_const_orientation_mode)).get_Array('cell_dimensions').get_string(1);
+
+    -- Less than 3 images cell sizing
+    ln_under_three_cell_width   varchar2(100) := lv_const_spacing_params.get_object(lower(lv_const_orientation_mode)).get_Array('under_three_cell_dimensions').get_string(0);
+    ln_under_three_cell_height  varchar2(100) := lv_const_spacing_params.get_object(lower(lv_const_orientation_mode)).get_Array('under_three_cell_dimensions').get_string(1);
 
     -- Image size
-    ln_img_width            varchar2(100) := lv_const_spacing_params.get_object(lower(lv_const_orientation_mode)).get_Array('image_dimensions').get_Number(0);
-    ln_img_height           varchar2(100) := lv_const_spacing_params.get_object(lower(lv_const_orientation_mode)).get_Array('image_dimensions').get_Number(1);
+    ln_img_width            varchar2(100) := lv_const_spacing_params.get_object(lower(lv_const_orientation_mode)).get_Array('image_dimensions').get_string(0);
+    ln_img_height           varchar2(100) := lv_const_spacing_params.get_object(lower(lv_const_orientation_mode)).get_Array('image_dimensions').get_string(1);
 
     procedure print_clob (p_clob in clob)
     is
@@ -157,7 +163,7 @@ XGL6hA+iAAAAAElFTkSuQmCC';
 
     begin
 
-        open    c_get_docs( b_doc_ids => p_doc_ids );
+        open    c_get_docs( b_doc_ids => p_doc_ids , b_row_size => ln_const_col_cnt );
         fetch   c_get_docs bulk collect into lt_docs;
         close   c_get_docs;
 
@@ -202,12 +208,14 @@ XGL6hA+iAAAAAElFTkSuQmCC';
             for k in i..least(i + ln_const_col_cnt - 1, lt_docs.count) loop
             -- for k in i..(i + ln_const_col_cnt - 1) loop
                 dbms_lob.append(lc_html,
-                    '<td style="width:'|| case when lt_docs.count <= 2 then ln_img_width else ln_cell_width end ||'px; height:' || case when lt_docs.count <= 2 then ln_img_height else ln_cell_height end ||'px;border:1px solid #dfd81d; vertical-align:middle;">'
+                    '<td style="width:'|| case when ( lt_docs.count <= 2 ) then ln_under_three_cell_width else ln_cell_width end ||'; height:' || case when ( lt_docs.count <= 2 ) then ln_under_three_cell_height else ln_cell_height end ||';border:1px solid #dfd81d; vertical-align:middle;">'
+                    -- '<td style="width:10cm; height:8cm;border:1px solid #dfd81d; vertical-align:middle;">'
+                    ----------------------------------------------------** Actual Image **-------------------
                     || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || lt_docs(k).img_data || '" ' --* actual image
                     -- || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || 'lv_img_based64' || '" ' --* for logging html
                     -- || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || lv_img_based64 || '" '   --* for testing img
-                    || 'style="max-width: ' || ln_cell_width || 'px; max-height: ' || ln_cell_height || 'px; width:' || ln_img_width || 'auto; height:' || ln_img_height ||'auto; object-fit:contain; display:block; border: 1px solid #dfd81d;">'
-                    -- || 'style="max-width: ' || ln_cell_width || 'px; max-height: ' || ln_cell_height || 'px; width:' || '1080' || 'px; height:' || '1920' ||'px; object-fit:contain; display:block; border: 1px solid #dfd81d;">'
+                    || 'style="max-width: ' || ln_cell_width || '; max-height: ' || ln_cell_height || '; width:' || ln_img_width || '; height:' || ln_img_height ||'; object-fit:contain; display:block; border: 1px solid #dfd81d;">'
+                    -- || ' style="width: auto; height: auto; object-fit:contain; display:block; border: 1px solid #dfd81d;">'
                     || '</td>'
                 );
 
