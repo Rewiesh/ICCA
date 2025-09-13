@@ -109,13 +109,13 @@ XGL6hA+iAAAAAElFTkSuQmCC';
             "row_spacing": {
                 "even": {
                     "first_page": { "last": 0, "not_last": 0 },
-                    "other_pages": { "last": 60, "not_last": 40 }
+                    "other_pages": { "last": 55, "not_last": 35 }
                 },
                 "odd": { "last": 0, "not_last": 0 }
             },
             "extra_spacing": { "last": 0, "not_last": 0 },
             "cell_dimensions" : ['1080px', '1920px'],
-            "under_three_cell_dimensions": ['980px', '1820px'],
+            "under_three_cell_dimensions": ['270px', '370px'],
             "image_dimensions" : ['270px', '370px']
             }
     }
@@ -251,16 +251,16 @@ XGL6hA+iAAAAAElFTkSuQmCC';
             end if;
 
             -- Divider between rows
-            dbms_lob.append(lc_html, '<tr style="height:' || ln_row_space_height ||'px; border:none";><td colspan="'|| to_char((ln_const_col_cnt*2-1)) ||'" style="height:10px; border:1px solid blue;"></td></tr>');
+            dbms_lob.append(lc_html, '<tr style="height:' || ln_row_space_height ||'px; border:none";><td colspan="'|| to_char((ln_const_col_cnt*2-1)) ||'" style="height:10px; border:none;"></td></tr>');
             --
 
             -- * append extra table row for spacing so "Algemene Opmerkingen"elements aren't too close to header image
             if  mod(lt_docs(i).row_num, 2) = 0 and not lt_docs(i).row_num = lt_docs(i).max_row_num
             then
-                dbms_lob.append(lc_html, '<tr style="height:' || ln_extra_not_last ||'px; border:none";><td colspan="'|| to_char((ln_const_col_cnt*2-1)) ||'" style="height:10px; border:3px dotted red;"></td></tr>');
+                dbms_lob.append(lc_html, '<tr style="height:' || ln_extra_not_last ||'px; border:none";><td colspan="'|| to_char((ln_const_col_cnt*2-1)) ||'" style="height:10px; border:none;"></td></tr>');
             elsif mod(lt_docs(i).row_num, 2) = 0 and lt_docs(i).row_num = lt_docs(i).max_row_num
             then
-                dbms_lob.append(lc_html, '<tr style="height:' || ln_extra_last ||'px; border:none";><td colspan="'|| to_char((ln_const_col_cnt*2-1)) ||'" style="height:10px; border:3px dotted red;"></td></tr>');
+                dbms_lob.append(lc_html, '<tr style="height:' || ln_extra_last ||'px; border:none";><td colspan="'|| to_char((ln_const_col_cnt*2-1)) ||'" style="height:10px; border:none;"></td></tr>');
             end if;
 
 
