@@ -6,13 +6,18 @@ with
     select  /*+ MATERIALIZE*/
             fom.id          id
     ,       fom.adt_id      adt_id
-    ,       fom.area_number area_number
     ,       fom.flr_id      flr_id
     ,       fom.cat_id      cat_id
     ,       fom.ara_id      ara_id
     ,       fom.pfr_id      pfr_id
+    ,       fom.remark      rmk
+    ,       flr.name || ' - ' || trim(ara.abbreviation) || '.' ||  fom.area_number          area_number
+    ,       cat.name                                                                        cat_name
     from    icca_adt_forms fom
-  )
+    join    icca_floors         flr on fom.flr_id = flr.id
+    join    icca_areas          ara on fom.ara_id = ara.id
+    join    icca_categories     cat on fom.cat_id = cat.id
+)
 , w_pfr as(
     select  fom.adt_id  adt_id
     ,       pfr.id      pfr_id
@@ -54,6 +59,9 @@ with
   ,       cat.name              cat_name
   from    icca_adt_results      ars
   join    icca_categories       cat on ars.cat_id = cat.id
+--   join    (
+--     select 1 from dual connect by level <= 3
+--   ) on 1=1
 )
 , w_frs as (
     select  frr_agg.agg_error_count agg_error_count
@@ -72,20 +80,50 @@ with
         ) frr_agg
     join    icca_error_types ete on frr_agg.ete_id = ete.id
 )
+/*
+    * Get related audits and current audit
+    * If > 6 records keep only top 3 detail records PER audit
+    * Limit to max 6 records in total, otherwise timeline chart looks messy
+*/
 , w_adt_related_scores as (
     select  adt_main.adt_id             main_adt_id
     ,       adt_related.adt_id          related_adt_id
     ,       adt_related.datum_controle  related_adt_date
+    ,       adt_related.rapport_nummer  related_adt_code
     ,       ars.score                   related_score
     ,       ars.approve_limit           related_approve_limit
+    ,       row_number() over (
+                partition by adt_related.adt_id
+                order by adt_related.datum_controle desc
+            ) as rn_related
+        ,   count(*) over (partition by adt_main.adt_id) as total_rows
     from    w_adt           adt_main
-    join    w_adt           adt_related on ( adt_main.cln_id = adt_related.cln_id and adt_main.adt_id < adt_related.adt_id)
+    join    w_adt           adt_related on ( adt_main.cln_id = adt_related.cln_id and adt_main.datum_controle >= adt_related.datum_controle ) --* Ensure main adt_id is also included
     join    w_adt_results   ars         on ars.adt_id = adt_related.adt_id
-) --select * from w_adt_related_scores where main_adt_id = 279;
+)
+,
+w_adt_related_scores_limited as(
+    select  ars.*
+    ,       row_number() over (partition by main_adt_id order by related_adt_date desc) as rn_global
+    from    w_adt_related_scores ars
+    where ((rn_related <= 3 and total_rows > 6)
+    or    (total_rows <= 6))
+)
+,
+w_adt_related_scores_final as (
+    select  ars.main_adt_id
+    ,       ars.related_adt_id
+    ,       ars.related_adt_date
+    ,       ars.related_adt_code
+    ,       ars.related_score
+    ,       ars.related_approve_limit
+    from    w_adt_related_scores_limited ars
+    where   rn_global <= 6
+) --select * from w_adt_related_scores_final where main_adt_id = 2809; --2809
 , w_fom_detail as (
     select      fom.adt_id                                                                      adt_id
-    ,           flr.name || ' - ' || trim(ara.abbreviation) || '.' ||  fom.area_number          area_number
-    ,           cat.name                                                                        cat_name
+    ,           fom.area_number                                                                 area_number
+    ,           cat_name                                                                        cat_name
     ,           epe.name                                                                        epe_name
     ,           ete.name                                                                        ete_name
     ,           frs.log_book_remark                                                             log_book_remark
@@ -93,13 +131,19 @@ with
                     row_number() over (partition by fom.adt_id order by log_book_image_id) end  picture_number
     ,           doc.id                                                                          doc_id
     from        w_fom fom
-    join        icca_floors         flr on fom.flr_id            = flr.id
-    join        icca_areas          ara on fom.ara_id            = ara.id
-    join        icca_categories     cat on fom.cat_id            = cat.id
     join        icca_fom_errors     frs on frs.fom_id            = fom.id
     join        icca_elementtypes   epe on frs.epe_id            = epe.id
     join        icca_error_types    ete on frs.ete_id            = ete.id
     left join   icca_documents      doc on frs.log_book_image_id = doc.id
+) --select * from w_fom_detail where adt_id = 7722;
+, w_ant as (
+    select      ket.name
+    ,           ant.element_value
+    ,           ant.element_comment
+    from        w_adt                   adt
+    join        icca_ket_clients        kcn
+    join        icca_kpi_elementen      ket on kcn.ket_id = ket.id
+    left join   icca_adt_kpi_elements ant on (ant.kcn_id = kcn.id and ant.ket_id = kcn.ket_id and adt.adt_id = ant.adt_id)
 )
 ------------------------------ * Chart CTE's *  -------------------------------------
 , w_column_chart
@@ -205,37 +249,40 @@ w_timeline_chart as (
                           'title'   value 'xAxis'
                       ,    'data'    value json_arrayagg(
                               json_object(
-                                      'value' value rsc.related_adt_date
+                                      'value' value to_char(rsc.related_adt_date, 'dd/mm/yy') || chr(13) || '    ' || rsc.related_adt_code
                               )
-                          )
-                    )
-                )
+                           order by rsc.related_adt_date asc
+                           returning clob )
+                     returning clob )
+                 returning clob )
              ,   'yAxis'   value  json_array(
                      json_object(
                           'title'   value 'Ytitle'
                         , 'series'  value json_array(
                                 json_object(
-                                      'name' value 'Series1'
+                                      'name' value 'Cijfer'
                                   ,    'data'    value json_arrayagg(
                                             json_object(
                                                     'value' value rsc.related_score
                                             )
-                                        )
-                                )
+                                         order by rsc.related_adt_date asc
+                                         returning clob )
+                                 returning clob )
                             ,
                                 json_object(
-                                      'name' value 'Series2'
+                                      'name' value 'Goedkeurgrens'
                                   ,    'data'    value json_arrayagg(
                                             json_object(
                                                     'value' value rsc.related_approve_limit
                                             )
-                                        )
-                                )
-                          )
-                      )
-                )
-            ) as chart_spec
-    from    w_adt_related_scores rsc
+                                         order by rsc.related_adt_date asc
+                                         returning clob )
+                                 returning clob )
+                           returning clob )
+                       returning clob )
+                returning clob )
+            returning clob) as chart_spec
+    from    w_adt_related_scores_final rsc
     group by main_adt_id
 )
 ------------------------------ * Table CTE's *  -------------------------------------
@@ -276,6 +323,21 @@ as
     from        w_fom_detail
     group by adt_id
 )
+, w_general_comments_tbl
+as
+(
+    select  adt_id      adt_id
+    ,       json_arrayagg(
+                    json_object(
+                            'ruimte_nr' value fom.area_number
+                        ,   'opmerking' value fom.rmk
+                    )
+                returning clob
+            ) as tbl_spec
+    from        w_fom fom
+    where    fom.rmk is not null
+    group by adt_id
+)
 select  json_array(
             json_object(
                     'filename' value 'rapport'
@@ -301,12 +363,13 @@ select  json_array(
                                 ------------------------------ * Chart Data *  -------------------------------------
                                   ,   'colChart'                  value json_array(cch.chart_spec)
                                   ,   'stockChart'                value json_array(sch.chart_spec)
-                                --   ,   'timelineChart'             value json_array(tch.chart_spec)
+                                  ,   'timelineChart'             value json_array(tch.chart_spec)
                                 ------------------------------ * Table Data *  -------------------------------------
-                                  ,   'audit_results'                value ars_tbl.tbl_spec
-                                  ,   'ruimteniveau_opmerkingen'     value rlc_tbl.tbl_spec
-                                  ,   'ruimteniveau_opmerkingen_distribute' value true
-                                  ------------------------------------------------------------------------
+                                  ,   'audit_results'                       value ars_tbl.tbl_spec
+                                  ,   'ruimteniveau_opmerkingen'            value rlc_tbl.tbl_spec
+                                  ,   'algemene_opmerkingen'                value gnc_tbl.tbl_spec
+                                  ,   'ruimteniveau_opmerkingen_distribute' value true              --* Forgot wtf this does
+                                ------------------------------ * HTML Data *  -------------------------------------
                                   ,   'htmlContent_use_tag_style'               value true
                                   ,   'htmlbettercontent_ignore_cell_margin'    value true
                                 )
@@ -318,9 +381,9 @@ select  json_array(
 from w_adt              adt
 join w_column_chart     cch on adt.adt_id = cch.adt_id
 join w_stock_chart      sch on adt.adt_id = sch.adt_id
--- join w_timeline_chart   tch on adt.adt_id = tch.main_adt_id
-join    w_audit_results_tbl         ars_tbl on ars_tbl.adt_id = adt.adt_id
-join    w_room_level_comments_tbl   rlc_tbl on rlc_tbl.adt_id = adt.adt_id
-
+join w_timeline_chart   tch on adt.adt_id = tch.main_adt_id
+join w_audit_results_tbl         ars_tbl on ars_tbl.adt_id = adt.adt_id
+join w_room_level_comments_tbl   rlc_tbl on rlc_tbl.adt_id = adt.adt_id
+left join w_general_comments_tbl      gnc_tbl on gnc_tbl.adt_id = adt.adt_id
 ;
 
