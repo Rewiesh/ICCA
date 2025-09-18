@@ -42,6 +42,7 @@ with
         ,   cln.city                                                                                as audit_stad
         ,   cln.street_name                                                                         as audit_straatnaam
         ,   cln.id                                                                                  as cln_id
+        ,   cnt.id                                                                                  as cnt_id
     from    icca_audits adt
     join    icca_clients            cnt on adt.cnt_id = cnt.id
     join    icca_client_locations   cln on adt.cln_id = cln.id
@@ -59,9 +60,6 @@ with
   ,       cat.name              cat_name
   from    icca_adt_results      ars
   join    icca_categories       cat on ars.cat_id = cat.id
---   join    (
---     select 1 from dual connect by level <= 3
---   ) on 1=1
 )
 , w_frs as (
     select  frr_agg.agg_error_count agg_error_count
@@ -136,14 +134,20 @@ w_adt_related_scores_final as (
     join        icca_error_types    ete on frs.ete_id            = ete.id
     left join   icca_documents      doc on frs.log_book_image_id = doc.id
 ) --select * from w_fom_detail where adt_id = 7722;
-, w_ant as (
-    select      ket.name
-    ,           ant.element_value
-    ,           ant.element_comment
-    from        w_adt                   adt
-    join        icca_ket_clients        kcn
+, w_kpi as (
+    select      adt.id              adt_id
+    ,           ket.name            ket_name
+    ,           case ant.element_value
+                    when 'O' then 'Onvoldoende'
+                    when 'V' then 'Voldoende'
+                    when 'G' then 'Goed'
+                    when 'N' then 'N.v.t.'
+                end                 ant_element_value
+    ,           ant.element_comment ant_element_comment
+    from        icca_audits             adt
+    join        icca_ket_clients        kcn on adt.cnt_id = kcn.cnt_id
     join        icca_kpi_elementen      ket on kcn.ket_id = ket.id
-    left join   icca_adt_kpi_elements ant on (ant.kcn_id = kcn.id and ant.ket_id = kcn.ket_id and adt.adt_id = ant.adt_id)
+    left join   icca_adt_kpi_elements   ant on (ant.kcn_id = kcn.id and ant.ket_id = kcn.ket_id and adt.id = ant.adt_id)
 )
 ------------------------------ * Chart CTE's *  -------------------------------------
 , w_column_chart
@@ -196,13 +200,18 @@ as
 (
     select  adt_id
     ,       json_object(
-                        'title'   value 'Test'
+                        'title'   value 'Stock Chart'
                     ,   'xAxis'   value  json_array(
                             json_object(
                                 'title'   value 'XAxis'
                             ,    'data'    value json_arrayagg(
                                     json_object(
-                                            'value' value ete_name || chr(10)  /*||chr(9) */ || frs.agg_error_count
+                                            'value' value ete_name || chr(10)  ||             LPAD(
+                                                frs.agg_error_count,
+                                                -- The target length for the string is its own length plus the calculated padding
+                                                LENGTH(frs.agg_error_count) + GREATEST(0, ROUND((least(LENGTH(ete_name), 14) - LENGTH(TO_CHAR(frs.agg_error_count))) / 2)),
+                                                ' ' -- The character to pad with (a space)
+                                            )
                                     )
                                 )
                             )
@@ -241,7 +250,6 @@ as
 ,
 w_timeline_chart as (
     select  main_adt_id
-    -- ,       related_adt_id
     ,       json_object(
                  'title'      value 'Chart Title'
              ,   'xAxis'   value  json_array(
@@ -338,6 +346,21 @@ as
     where    fom.rmk is not null
     group by adt_id
 )
+, w_other_and_hygienic_comments_tbl
+as
+(
+    select  adt_id      adt_id
+    ,       json_arrayagg(
+                    json_object(
+                            'algemeen'      value kpi.ket_name
+                        ,   'status'        value kpi.ant_element_value
+                        ,   'opmerking'     value kpi.ant_element_comment
+                    )
+                returning clob
+            ) as tbl_spec
+    from        w_kpi kpi
+    group by adt_id
+)
 select  json_array(
             json_object(
                     'filename' value 'rapport'
@@ -368,7 +391,8 @@ select  json_array(
                                   ,   'audit_results'                       value ars_tbl.tbl_spec
                                   ,   'ruimteniveau_opmerkingen'            value rlc_tbl.tbl_spec
                                   ,   'algemene_opmerkingen'                value gnc_tbl.tbl_spec
-                                  ,   'ruimteniveau_opmerkingen_distribute' value true              --* Forgot wtf this does
+                                  ,   'overige_hygienische_aspecten'        value ohc_tbl.tbl_spec
+                                  ,   'ruimteniveau_opmerkingen_distribute' value true              --* Forgot what this does
                                 ------------------------------ * HTML Data *  -------------------------------------
                                   ,   'htmlContent_use_tag_style'               value true
                                   ,   'htmlbettercontent_ignore_cell_margin'    value true
@@ -378,12 +402,13 @@ select  json_array(
          returning clob)as aop_data
 ,       adt.adt_id adt_id
 ,       rlc_tbl.doc_ids
-from w_adt              adt
-join w_column_chart     cch on adt.adt_id = cch.adt_id
-join w_stock_chart      sch on adt.adt_id = sch.adt_id
-join w_timeline_chart   tch on adt.adt_id = tch.main_adt_id
-join w_audit_results_tbl         ars_tbl on ars_tbl.adt_id = adt.adt_id
-join w_room_level_comments_tbl   rlc_tbl on rlc_tbl.adt_id = adt.adt_id
-left join w_general_comments_tbl      gnc_tbl on gnc_tbl.adt_id = adt.adt_id
+from w_adt                                  adt
+join w_column_chart                         cch on adt.adt_id = cch.adt_id
+join w_stock_chart                          sch on adt.adt_id = sch.adt_id
+join w_timeline_chart                       tch on adt.adt_id = tch.main_adt_id
+join w_audit_results_tbl                    ars_tbl on ars_tbl.adt_id = adt.adt_id
+join w_room_level_comments_tbl              rlc_tbl on rlc_tbl.adt_id = adt.adt_id
+left join w_general_comments_tbl            gnc_tbl on gnc_tbl.adt_id = adt.adt_id
+left join w_other_and_hygienic_comments_tbl ohc_tbl on ohc_tbl.adt_id = adt.adt_id
 ;
 
