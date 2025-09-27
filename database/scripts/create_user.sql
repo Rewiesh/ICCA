@@ -27,6 +27,10 @@ grant create trigger to icca;
 grant create type to icca;
 grant create view to icca;
 grant execute dynamic mle to icca;
+grant create any context to icca;
+
+
+alter user icca quota unlimited on icca_ts;
 
 
 
