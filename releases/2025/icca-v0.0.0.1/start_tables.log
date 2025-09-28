@@ -1,0 +1,460 @@
+icca_charts_images.tab
+
+Table ICCA_CHARTS_IMAGES created.
+
+icca_keep_alive_jobs.tab
+
+Table ICCA_KEEP_ALIVE_JOBS created.
+
+
+Table ICCA_KEEP_ALIVE_JOBS altered.
+
+icca_application_error_messages.tab
+
+Table ICCA_APPLICATION_ERROR_MESSAGES created.
+
+
+Table ICCA_APPLICATION_ERROR_MESSAGES altered.
+
+
+Table ICCA_APPLICATION_ERROR_MESSAGES altered.
+
+icca_blob_systeemparameters.tab
+
+Table ICCA_BLOB_SYSTEEMPARAMETERS created.
+
+icca_documents.tab
+
+Table ICCA_DOCUMENTS created.
+
+
+Table ICCA_DOCUMENTS altered.
+
+icca_branches.tab
+
+Table ICCA_BRANCHES created.
+
+
+Table ICCA_BRANCHES altered.
+
+
+Index ICCA_BCH_NAME_UK_IDX1 created.
+
+icca_user_groups.tab
+
+Table ICCA_USER_GROUPS created.
+
+
+Table ICCA_USER_GROUPS altered.
+
+
+Index ICCA_UGP_NAME_SYSTEM_NAME_UK_IDX1 created.
+
+icca_users.tab
+
+Table ICCA_USERS created.
+
+
+Table ICCA_USERS altered.
+
+
+Table ICCA_USERS altered.
+
+
+Table ICCA_USERS altered.
+
+
+Index ICCA_USR_USERNAME_UK_IDX1 created.
+
+icca_usr_emails.tab
+
+Table ICCA_USR_EMAILS created.
+
+
+Index ICCA_EML_USR_ID_IDX1 created.
+
+
+Table ICCA_USR_EMAILS altered.
+
+
+Table ICCA_USR_EMAILS altered.
+
+icca_administrators.tab
+
+Table ICCA_ADMINISTRATORS created.
+
+
+Table ICCA_ADMINISTRATORS altered.
+
+
+Table ICCA_ADMINISTRATORS altered.
+
+
+Index ICCA_ADM_USR_ID_UK_IDX1 created.
+
+
+Index ICCA_ADM_FIRST_LAST_NAME_UK_IDX2 created.
+
+icca_floors.tab
+
+Table ICCA_FLOORS created.
+
+
+Table ICCA_FLOORS altered.
+
+
+Index ICCA_FLR_NAME_UK_IDX1 created.
+
+
+Index ICCA_FLR_CODE_UK_IDX2 created.
+
+icca_error_kinds.tab
+
+Table ICCA_ERROR_KINDS created.
+
+
+Table ICCA_ERROR_KINDS altered.
+
+
+Index ICCA_EKD_NAME_UK_IDX1 created.
+
+icca_areas.tab
+
+Table ICCA_AREAS created.
+
+
+Table ICCA_AREAS altered.
+
+
+Index ICCA_ARA_NAME_UK_IDX1 created.
+
+icca_categories.tab
+
+Table ICCA_CATEGORIES created.
+
+
+Table ICCA_CATEGORIES altered.
+
+
+Index ICCA_CAT_NAME_UK_IDX1 created.
+
+icca_ara_categories.tab
+
+Table ICCA_ARA_CATEGORIES created.
+
+
+Table ICCA_ARA_CATEGORIES altered.
+
+
+Table ICCA_ARA_CATEGORIES altered.
+
+
+Table ICCA_ARA_CATEGORIES altered.
+
+icca_error_categories.tab
+
+Table ICCA_ERROR_CATEGORIES created.
+
+
+Table ICCA_ERROR_CATEGORIES altered.
+
+
+Index ICCA_ECE_NAME_UK_IDX1 created.
+
+icca_error_types.tab
+
+Table ICCA_ERROR_TYPES created.
+
+
+Table ICCA_ERROR_TYPES altered.
+
+
+Table ICCA_ERROR_TYPES altered.
+
+
+Table ICCA_ERROR_TYPES altered.
+
+
+Index ICCA_ETE_NAME_ECE_ID_EKD_ID_UK_IDX1 created.
+
+icca_elementtypes.tab
+
+Table ICCA_ELEMENTTYPES created.
+
+
+Table ICCA_ELEMENTTYPES altered.
+
+
+Index ICCA_EPE_NAME_UK_IDX1 created.
+
+icca_epe_areas.tab
+
+Table ICCA_EPE_AREAS created.
+
+
+Table ICCA_EPE_AREAS altered.
+
+
+Table ICCA_EPE_AREAS altered.
+
+
+Table ICCA_EPE_AREAS altered.
+
+
+Index ICCA_ERA_EPE_ID_ARA_ID_UK_IDX1 created.
+
+icca_performers.tab
+
+Table ICCA_PERFORMERS created.
+
+
+Table ICCA_PERFORMERS altered.
+
+
+Table ICCA_PERFORMERS altered.
+
+
+Index ICCA_PFR_USR_ID_UK_IDX1 created.
+
+
+Index ICCA_PFR_FIRST_LAST_NAME_UK_IDX2 created.
+
+icca_incoming_messages.tab
+
+Table ICCA_INCOMING_MESSAGES created.
+
+
+Table ICCA_INCOMING_MESSAGES altered.
+
+
+Table ICCA_INCOMING_MESSAGES altered.
+
+icca_clients.tab
+
+Table ICCA_CLIENTS created.
+
+
+Table ICCA_CLIENTS altered.
+
+
+Table ICCA_CLIENTS altered.
+
+
+Table ICCA_CLIENTS altered.
+
+
+Index ICCA_CNT_USR_ID_UK_IDX1 created.
+
+
+Index ICCA_CNT_COMPANY_NAME_UK_IDX2 created.
+
+icca_client_locations.tab
+
+Table ICCA_CLIENT_LOCATIONS created.
+
+
+Table ICCA_CLIENT_LOCATIONS altered.
+
+
+Table ICCA_CLIENT_LOCATIONS altered.
+
+
+Index ICCA_CLN_NAME_UK_IDX1 created.
+
+icca_pfr_clients.tab
+
+Table ICCA_PFR_CLIENTS created.
+
+
+Table ICCA_PFR_CLIENTS altered.
+
+
+Table ICCA_PFR_CLIENTS altered.
+
+
+Table ICCA_PFR_CLIENTS altered.
+
+icca_cat_clients.tab
+
+Table ICCA_CAT_CLIENTS created.
+
+
+Table ICCA_CAT_CLIENTS altered.
+
+
+Table ICCA_CAT_CLIENTS altered.
+
+
+Table ICCA_CAT_CLIENTS altered.
+
+icca_cat_buildingsize_scales.tab
+
+Table ICCA_CAT_BUILDINGSIZE_SCALES created.
+
+
+Table ICCA_CAT_BUILDINGSIZE_SCALES altered.
+
+icca_cat_limits.tab
+
+Table ICCA_CAT_LIMITS created.
+
+
+Table ICCA_CAT_LIMITS altered.
+
+
+Table ICCA_CAT_LIMITS altered.
+
+
+Table ICCA_CAT_LIMITS altered.
+
+icca_kpi_elementen.tab
+
+Table ICCA_KPI_ELEMENTEN created.
+
+
+Table ICCA_KPI_ELEMENTEN altered.
+
+
+Index ICCA_KET_NAME_UK_IDX1 created.
+
+icca_ket_clients.tab
+
+Table ICCA_KET_CLIENTS created.
+
+
+Table ICCA_KET_CLIENTS altered.
+
+
+Table ICCA_KET_CLIENTS altered.
+
+
+Table ICCA_KET_CLIENTS altered.
+
+
+Index ICCA_KCN_KET_CNT_UK_IDX1 created.
+
+icca_audits.tab
+
+Table ICCA_AUDITS created.
+
+
+Table ICCA_AUDITS altered.
+
+
+Table ICCA_AUDITS altered.
+
+
+Table ICCA_AUDITS altered.
+
+
+Table ICCA_AUDITS altered.
+
+
+Table ICCA_AUDITS altered.
+
+
+Sequence ICCA_ADT_CODE_SEQ created.
+
+icca_adt_forms.tab
+
+Table ICCA_ADT_FORMS created.
+
+
+Table ICCA_ADT_FORMS altered.
+
+
+Table ICCA_ADT_FORMS altered.
+
+
+Table ICCA_ADT_FORMS altered.
+
+
+Table ICCA_ADT_FORMS altered.
+
+
+Table ICCA_ADT_FORMS altered.
+
+
+Table ICCA_ADT_FORMS altered.
+
+icca_adt_kpi_elements.tab
+
+Table ICCA_ADT_KPI_ELEMENTS created.
+
+
+Table ICCA_ADT_KPI_ELEMENTS altered.
+
+
+Table ICCA_ADT_KPI_ELEMENTS altered.
+
+
+Table ICCA_ADT_KPI_ELEMENTS altered.
+
+
+Table ICCA_ADT_KPI_ELEMENTS altered.
+
+icca_adt_performers.tab
+
+Table ICCA_ADT_PERFORMERS created.
+
+
+Table ICCA_ADT_PERFORMERS altered.
+
+
+Table ICCA_ADT_PERFORMERS altered.
+
+
+Table ICCA_ADT_PERFORMERS altered.
+
+icca_adt_present_clients.tab
+
+Table ICCA_ADT_PRESENT_CLIENTS created.
+
+
+Table ICCA_ADT_PRESENT_CLIENTS altered.
+
+
+Table ICCA_ADT_PRESENT_CLIENTS altered.
+
+icca_adt_results.tab
+
+Table ICCA_ADT_RESULTS created.
+
+
+Table ICCA_ADT_RESULTS altered.
+
+
+Table ICCA_ADT_RESULTS altered.
+
+
+Table ICCA_ADT_RESULTS altered.
+
+icca_fom_errors.tab
+
+Table ICCA_FOM_ERRORS created.
+
+
+Table ICCA_FOM_ERRORS altered.
+
+
+Table ICCA_FOM_ERRORS altered.
+
+
+Table ICCA_FOM_ERRORS altered.
+
+
+Table ICCA_FOM_ERRORS altered.
+
+
+Table ICCA_FOM_ERRORS altered.
+
+
+Table ICCA_FOM_ERRORS altered.
+
+icca_scores.tab
+
+Table ICCA_SCORES created.
+
+
+Table ICCA_SCORES altered.
+

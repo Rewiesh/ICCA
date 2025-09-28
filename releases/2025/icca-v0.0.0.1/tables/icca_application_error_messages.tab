@@ -1,0 +1,10 @@
+create table icca_application_error_messages (
+    -- err
+    id              number          generated always as identity 
+,   name            varchar2(100)   not null
+,   message         varchar2(500)   not null
+);
+
+-- constraints                             
+alter table icca_application_error_messages add constraint icca_err_pk primary key(id);
+alter table icca_application_error_messages add constraint icca_err_name_uk1 unique (name);
