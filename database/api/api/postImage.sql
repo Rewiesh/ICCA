@@ -19,7 +19,7 @@ declare
     v_username    varchar2(100);
 begin
     -- get user
-    v_username := :username; 
+    v_username := :username;
 
     -- set application context voor audit triggers
     dbms_session.set_identifier(v_username);
@@ -62,6 +62,6 @@ end;]'
                           ,   p_source_type         => 'HEADER'
                           ,   p_param_type          => 'STRING'
                           );
-    commit;                          
+    commit;
 end;
 /

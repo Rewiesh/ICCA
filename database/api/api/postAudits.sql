@@ -18,7 +18,7 @@ begin
     ln_pfr_id     number;
 begin
     -- get user
-    v_username := :username; 
+    v_username := :username;
 
     begin
         -- get the pfr_id from the username
@@ -33,7 +33,7 @@ begin
             -- geen performer gevonden, dus geen audit
             ln_pfr_id := null;
     end;
-    
+
     -- set application context voor audit triggers
     dbms_session.set_identifier(v_username);
 
@@ -63,8 +63,7 @@ end;
                           ,   p_param_type          => 'STRING'
                           );
 
-    commit;                          
+    commit;
 end;
 /
 
-                                                    
