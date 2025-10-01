@@ -227,6 +227,23 @@ is
         when others then
             if c_get_docs%isopen then close c_get_docs; end if;
             raise;
-    end;
+    end f_get_imgs_html;
+
+    procedure show_inline_pdf (   p_output_blob      in blob
+                              ,   p_output_filename  in varchar2
+                              ,   p_output_mime_type in varchar2
+                              )
+    is
+        l_pdf blob := p_output_blob;
+    begin
+        sys.htp.init;
+        sys.owa_util.mime_header( 'application/pdf', false );
+        sys.htp.p('Content-length: ' || sys.dbms_lob.getlength( l_pdf));
+        sys.htp.p('Content-Disposition: inline; filename="' || 'Rapportage ICCA Kwaliteitsmeting.pdf'|| '"' );
+        sys.htp.p('Cache-Control: max-age=10');  -- tell the browser to cache for 10s, adjust as necessary
+        sys.owa_util.http_header_close;
+        sys.wpg_docload.download_file( l_pdf);
+    --   apex_application.stop_apex_engine;
+    end show_inline_pdf;
 end icca_aop_pdf;
 /
