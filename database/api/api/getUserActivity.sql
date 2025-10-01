@@ -1,12 +1,4 @@
 begin
-    -- maak een modules aan voor het ophalen van audits
-    ords.define_module(   p_module_name     => 'api'
-                      ,   p_base_path       => 'api/'
-                      ,   p_items_per_page  => 0
-                      );
-end;
-/
-begin
     -- maak de tempalte aan voor de module
     ords.define_template(   p_module_name => 'api'
                         ,   p_pattern     => 'getUserActivity/'
@@ -32,6 +24,6 @@ begin
                           ,   p_param_type          => 'STRING'
                           );
 
-    commit;                          
+    commit;
 end;
 /

@@ -61,7 +61,7 @@ with province_data as (
     select 'Frankrijk', 'Auvergne-Rhône-Alpes' from dual union all
     select 'Frankrijk', 'Nouvelle-Aquitaine' from dual union all
     select 'Frankrijk', 'Occitanie' from dual union all
-    select 'Frankrijk', 'Grand Est' from dual union all
+    select 'Frankrijk', 'Grand Est' from dual
 
     -- Luxemburg (landen/regio's klein, maar als provincie opgegeven)
     union all

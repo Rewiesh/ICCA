@@ -1,0 +1,133 @@
+logger_install.sql
+_____________________________________________________________________________
+User has all required privileges, installation will continue.
+_____________________________________________________________________________
+
+
+PL/SQL procedure successfully completed.
+
+tables/logger_logs.sql
+
+PL/SQL procedure successfully completed.
+
+
+PL/SQL procedure successfully completed.
+
+tables/logger_prefs.sql
+
+PL/SQL procedure successfully completed.
+
+
+Trigger BIU_LOGGER_PREFS compiled
+
+LINE/COL  ERROR
+--------- -------------------------------------------------------------
+6/5       PLS-00049: bad bind variable 'NEW.PREF_TYPE'
+6/29      PLS-00049: bad bind variable 'NEW.PREF_TYPE'
+9/11      PLS-00049: bad bind variable 'NEW.PREF_TYPE'
+19/13     PLS-00049: bad bind variable 'NEW.PREF_TYPE'
+30/13     PLS-00049: bad bind variable 'NEW.PREF_TYPE'
+40/13     PLS-00049: bad bind variable 'NEW.PREF_TYPE'
+Errors: check compiler log
+
+Trigger BIU_LOGGER_PREFS altered.
+
+
+PL/SQL procedure successfully completed.
+
+
+PL/SQL procedure successfully completed.
+
+
+PL/SQL procedure successfully completed.
+
+
+PL/SQL procedure successfully completed.
+
+
+Trigger BIU_LOGGER_PREFS altered.
+
+tables/logger_logs_apex_items.sql
+
+PL/SQL procedure successfully completed.
+
+
+Trigger BIU_LOGGER_APEX_ITEMS compiled
+
+tables/logger_prefs_by_client_id.sql
+
+PL/SQL procedure successfully completed.
+
+jobs/logger_purge_job.sql
+
+PL/SQL procedure successfully completed.
+
+jobs/logger_unset_prefs_by_client.sql
+
+PL/SQL procedure successfully completed.
+
+views/logger_logs_5_min.sql
+
+View LOGGER_LOGS_5_MIN created.
+
+views/logger_logs_60_min.sql
+
+View LOGGER_LOGS_60_MIN created.
+
+views/logger_logs_terse.sql
+Warning: View created with compilation errors.
+packages/logger.pks
+
+Package LOGGER compiled
+
+packages/logger.pkb
+
+Package Body LOGGER compiled
+
+Recompile biu_logger_prefs after logger.pkb
+
+Trigger BIU_LOGGER_PREFS altered.
+
+contexts/logger_context.sql
+
+PL/SQL procedure successfully completed.
+
+procedures/logger_configure.plb
+
+Procedure LOGGER_CONFIGURE compiled
+
+install/post_install_configuration.sql
+Calling logger_configure
+
+PL/SQL procedure successfully completed.
+
+Setting Logger Level
+
+PL/SQL procedure successfully completed.
+
+
+*************************************************
+Now executing LOGGER.STATUS...
+
+Project Home Page        : https://github.com/oraopensource/logger/
+Logger Version           : 3.1.1
+Debug Level              : DEBUG
+Capture Call Stack       : TRUE
+Protect Admin Procedures : TRUE
+APEX Tracing             : Enabled
+SCN Capture              : Disabled
+Min. Purge Level         : DEBUG
+Purge Older Than         : 7 days
+Pref by client_id expire : 12 hours
+For all client info see  : logger_prefs_by_client_id
+
+
+PL/SQL procedure successfully completed.
+
+*************************************************
+
+PL/SQL procedure successfully completed.
+
+
+View LOGGER_LOGS_TERSE altered.
+
