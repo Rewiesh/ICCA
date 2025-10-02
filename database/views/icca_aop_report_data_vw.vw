@@ -127,13 +127,17 @@ w_adt_related_scores_final as (
     ,           frs.log_book_remark                                                             log_book_remark
     ,           case when log_book_image_id is not null then
                     row_number() over (partition by fom.adt_id order by log_book_image_id) end  picture_number
-    ,           doc.id                                                                          doc_id
+    ,           nvl2( doc_log_book.id,
+                      doc_log_book.id || nvl2(doc_tech_aspects.id, ',' || doc_tech_aspects.id, ''),
+                      doc_tech_aspects.id
+                ) as doc_id
     from        w_fom fom
     join        icca_fom_errors     frs on frs.fom_id            = fom.id
     join        icca_elementtypes   epe on frs.epe_id            = epe.id
     join        icca_error_types    ete on frs.ete_id            = ete.id
-    left join   icca_documents      doc on frs.log_book_image_id = doc.id
-) --select * from w_fom_detail where adt_id = 7722;
+    left join   icca_documents      doc_log_book     on frs.log_book_image_id          = doc_log_book.id
+    left join   icca_documents      doc_tech_aspects on frs.technical_aspects_image_id = doc_tech_aspects.id
+) --select * from w_fom_detail where adt_id = 2;
 , w_kpi as (
     select      adt.id              adt_id
     ,           ket.name            ket_name
@@ -330,7 +334,7 @@ as
             ) as tbl_spec
     from        w_fom_detail
     group by adt_id
-)
+) --select * from w_room_level_comments_tbl where adt_id = 2;
 , w_general_comments_tbl
 as
 (
