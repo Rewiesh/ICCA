@@ -26,6 +26,12 @@ with
     from    w_fom           fom
     join    icca_performers pfr on fom.pfr_id = pfr.id
 )
+, w_apt as(
+    select      adt_id adt_id
+    ,           listagg(name, ', ') within group(order by apt.id) as apt_names
+    from        icca_adt_present_clients apt
+    group by    adt_id
+)
 , w_adt as(
     select
             trim(to_char(adt.audit_date, 'FMDD Mon YYYY', 'NLS_DATE_LANGUAGE = DUTCH'))             as datum_controle_volledig
@@ -37,7 +43,7 @@ with
         ,   adt.audit_date                                                                          as datum_controle
         ,   to_char(adt.audit_date, 'HH24:MI')                                                      as tijdstip_controle
         ,   pfr.controle_door                                                                       as controle_door
-        ,   nvl(null, 'n.v.t.')                                                                     as aanwezig_leverancier --> double check
+        ,   nvl(apt_names, 'n.v.t.')                                                                as aanwezig_leverancier --> double check
         ,   cln.country                                                                             as audit_land
         ,   cln.city                                                                                as audit_stad
         ,   cln.street_name                                                                         as audit_straatnaam
@@ -48,6 +54,7 @@ with
     join    icca_client_locations   cln on adt.cln_id = cln.id
     -- * join on adt_forms may produce multiple rows, so fetch first row as all performers should be the same anyways
     join    w_pfr                   pfr on (pfr.adt_id = adt.id and rn = 1)
+    join    w_apt                   apt on apt.adt_id = adt.id
     where   adt.audit_completed = 'Y'
 ) --select * from w_adt;
 , w_adt_results as(
@@ -118,25 +125,109 @@ w_adt_related_scores_final as (
     from    w_adt_related_scores_limited ars
     where   rn_global <= 6
 ) --select * from w_adt_related_scores_final where main_adt_id = 2809; --2809
+, w_fom_all as (
+    select
+          adt_id
+        , area_number
+        , cat_name
+        , epe_name
+        , ete_name
+        , log_book_remark
+        , frs_id
+        , doc_id
+        , doc_type
+        , case when doc_id is not null then
+          dense_rank() over (
+             partition by adt_id
+             order by
+             case when doc_id is not null then 0 else 1 end, frs_id
+            --  case when doc_id is not null then frs_id end
+          )
+         end
+         as grp_rank
+    from (
+        -- (log book rows)
+        select  fom.adt_id          as adt_id
+        ,       fom.area_number     as area_number
+        ,       cat_name            as cat_name
+        ,       epe.name            as epe_name
+        ,       ete.name            as ete_name
+        ,       frs.log_book_remark as log_book_remark
+        ,       frs.id              as frs_id
+        ,       doc_log_book.id     as doc_id
+        ,       'LOG'               as doc_type
+        from    w_fom fom
+        join    icca_fom_errors     frs on frs.fom_id = fom.id
+        join    icca_elementtypes   epe on frs.epe_id = epe.id
+        join    icca_error_types    ete on frs.ete_id = ete.id
+        --* Doc Log Book
+        left join icca_documents doc_log_book  on frs.log_book_image_id = doc_log_book.id
+        union all
+        -- (technical aspects rows)
+        select  fom.adt_id          as adt_id
+        ,       fom.area_number     as area_number
+        ,       cat_name            as cat_name
+        ,       epe.name            as epe_name
+        ,       ete.name            as ete_name
+        ,       frs.log_book_remark as log_book_remark
+        ,       frs.id              as frs_id
+        ,       doc_tech_aspects.id as doc_id
+        ,       'TECH'              as doc_type
+        from    w_fom fom
+        join    icca_fom_errors     frs on frs.fom_id = fom.id
+        join    icca_elementtypes   epe on frs.epe_id = epe.id
+        join    icca_error_types    ete on frs.ete_id = ete.id
+        --* Doc Tech Aspects
+        left join icca_documents doc_tech_aspects on frs.technical_aspects_image_id = doc_tech_aspects.id
+    ) docs
+)
+-- select * from w_fom_all
+-- where adt_id = 7722;
+, w_fom_doc_cnt as(
+    select  count(grp_rank) max_cnt
+    ,       adt_id
+    ,       grp_rank from w_fom_all
+    group by adt_id, grp_rank
+)
+-- select * from w_fom_doc_cnt where adt_id = 7722;
+,
+w_fom_doc_grouped as (
+    select  adt_id
+    ,       grp_rank
+    ,       max_cnt
+    from w_fom_doc_cnt
+    where max_cnt = (select max(max_cnt) from w_fom_doc_cnt)
+)
+-- select * from w_fom_doc_grouped
+-- where adt_id = 7722;
+, w_fom_doc_ordered as (
+    select fom.*,
+           row_number() over (
+               partition by adt_id
+               order by case when grp_rank in (select grp_rank
+                                              from w_fom_doc_grouped
+                                              where adt_id = fom.adt_id)
+                             then 0 else 1 end,
+                        grp_rank,
+                        frs_id,
+                        case when doc_type = 'LOG' then 0 else 1 end
+           ) as new_picture_number
+    from w_fom_all fom
+)
 , w_fom_detail as (
-    select      fom.adt_id                                                                      adt_id
-    ,           fom.area_number                                                                 area_number
-    ,           cat_name                                                                        cat_name
-    ,           epe.name                                                                        epe_name
-    ,           ete.name                                                                        ete_name
-    ,           frs.log_book_remark                                                             log_book_remark
-    ,           case when log_book_image_id is not null then
-                    row_number() over (partition by fom.adt_id order by log_book_image_id) end  picture_number
-    ,           nvl2( doc_log_book.id,
-                      doc_log_book.id || nvl2(doc_tech_aspects.id, ',' || doc_tech_aspects.id, ''),
-                      doc_tech_aspects.id
-                ) as doc_id
-    from        w_fom fom
-    join        icca_fom_errors     frs on frs.fom_id            = fom.id
-    join        icca_elementtypes   epe on frs.epe_id            = epe.id
-    join        icca_error_types    ete on frs.ete_id            = ete.id
-    left join   icca_documents      doc_log_book     on frs.log_book_image_id          = doc_log_book.id
-    left join   icca_documents      doc_tech_aspects on frs.technical_aspects_image_id = doc_tech_aspects.id
+    select adt_id,
+        area_number,
+        cat_name,
+        epe_name,
+        ete_name,
+        log_book_remark,
+        listagg(case when doc_id is not null then new_picture_number end, ' + ')
+            within group(order by new_picture_number asc) as picture_number,
+        listagg(case when doc_id is not null then doc_id end, ',')
+            within group(order by new_picture_number asc) as doc_ids
+    from w_fom_doc_ordered
+    group by adt_id, area_number, cat_name, epe_name, ete_name, log_book_remark
+    order by min(new_picture_number)
 ) --select * from w_fom_detail where adt_id = 2;
 , w_kpi as (
     select      adt.id              adt_id
@@ -319,7 +410,7 @@ as
 as
 (
     select  adt_id      adt_id
-    ,       listagg(doc_id, ',') within group(order by doc_id) as doc_ids
+    ,       listagg(doc_ids, ',') within group(order by picture_number) as doc_ids
     ,       json_arrayagg(
                     json_object(
                             'ruimte_nr' value area_number
