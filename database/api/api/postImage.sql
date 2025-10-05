@@ -17,6 +17,7 @@ declare
     ln_ige_id     number;
     v_doc_id      number;
     v_username    varchar2(100);
+    v_file_url    varchar2(500);
 begin
     -- get user
     v_username := :username;
@@ -32,16 +33,32 @@ begin
         po_ige_id      => ln_ige_id
     );
 
+    -- schrijf bestand naar file system
+    begin
+        v_file_url := icca_file_upload.f_save_uploaded_file(
+                p_blob      => v_audit_data
+            ,   p_filename  => 'image.jpg'
+            ,   p_mime_type => 'image/png'
+        );
+    exception
+        when others then
+            -- als file schrijven faalt, log de error maar ga door
+            -- (zodat het ook werkt als maxapex de rechten nog niet heeft gefixt)
+            v_file_url := null;
+    end;
+
     -- insert the image into icca_documents
     insert into icca_documents (
-        name,
-        mime_type,
-        image_data
+            name
+        ,   mime_type
+        ,   image_data
+        ,   file_url
     )
     values (
-        'image.jpg',            -- Je kan dit dynamisch maken als je bestandsnaam meestuurt
-        'image/png',            -- idem: mime-type kan uit headers komen of extra veld
-        v_audit_data
+            'image.jpg'            -- Je kan dit dynamisch maken als je bestandsnaam meestuurt
+        ,   'image/png'            -- idem: mime-type kan uit headers komen of extra veld
+        ,   v_audit_data
+        ,   v_file_url
     )
     returning id into v_doc_id;
 

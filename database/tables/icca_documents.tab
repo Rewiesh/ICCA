@@ -4,6 +4,8 @@ create table icca_documents(
     ,   name            varchar2(100)
     ,   mime_type       varchar2(50)
     ,   image_data      blob
+    ,   file_url        varchar2(500)
+    ,   migrated_data   varchar2(1 char) default 'N' not null
     ,   created_date    date          default sysdate                           not null
     ,   created_by      varchar2(50)                                            not null
     ,   modified_date   date          

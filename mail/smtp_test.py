@@ -5,7 +5,7 @@ from email.mime.text import MIMEText
 smtp_server = "smtp.transip.email"
 port = 465  # Correcte poort voor SSL
 username = "info@iccaadvies.eu"
-password = "basnyz-qotWa3-cujsak"
+password = "zyrpeb-nipraF-9fyppo" # rorzaQ-kiz
 from_addr = "info@iccaadvies.eu"
 to_addr = "diewish0@gmail.com"   # testmail naar je eigen adres
 
