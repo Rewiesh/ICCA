@@ -14,6 +14,10 @@ is
                                 )
     return varchar2;
     --
+    -- Check if user exists
+    function f_check_is_user_exists( pi_username in varchar2 )
+    return boolean; 
+    --
     -- Check if user login is valid
     function is_login_valid 
         ( p_username    in icca_users.username%type
@@ -21,6 +25,9 @@ is
         , p_user_group  in icca_user_groups.system_name%type  default null
         )
     return boolean;
+    --
+    -- Send password reset email  
+    procedure p_send_password_reset( pi_username in varchar2 );
     --
 end icca_authentication;
 /

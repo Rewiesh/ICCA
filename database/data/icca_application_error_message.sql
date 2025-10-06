@@ -31,6 +31,7 @@ begin
     -- icca_users
     merge_error_msgs( p_name => 'ICCA_USR_USERNAME_UK_IDX1', p_message => 'Er bestaat al een gebruiker met deze gebruikersnaam.');
     -- merge_error_msgs( p_name => 'ICCA_USR_EMAIL_UK_IDX2', p_message => 'Er bestaat al een gebruiker met deze Email Adres.');
+    merge_error_msgs( p_name => 'ICCA_PFR_FIRST_LAST_NAME_UK_IDX2', p_message => 'Er bestaat al een performer met deze voornaam en achternaam.');
     -- icca_performers
     merge_error_msgs( p_name => 'ICCA_PFR_USR_ID_UK_IDX1', p_message => 'Er bestaat al een account voor deze performer.');      
     merge_error_msgs( p_name => 'ICCA_PFR_FIRST_LAST_NAME_UK_IDX2', p_message => 'Er bestaat al een performer met deze voornaam en achternaam');    
