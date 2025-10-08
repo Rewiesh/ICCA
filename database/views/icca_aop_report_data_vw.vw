@@ -54,7 +54,7 @@ with
     join    icca_client_locations   cln on adt.cln_id = cln.id
     -- * join on adt_forms may produce multiple rows, so fetch first row as all performers should be the same anyways
     join    w_pfr                   pfr on (pfr.adt_id = adt.id and rn = 1)
-    join    w_apt                   apt on apt.adt_id = adt.id
+    left join w_apt                   apt on apt.adt_id = adt.id
     where   adt.audit_completed = 'Y'
 ) --select * from w_adt;
 , w_adt_results as(
@@ -68,9 +68,10 @@ with
   from    icca_adt_results      ars
   join    icca_categories       cat on ars.cat_id = cat.id
 )
-, w_frs as (
+, w_frs_actuals as (
     select  frr_agg.agg_error_count agg_error_count
     ,       frr_agg.adt_id          adt_id
+    ,       ete_id                  ete_id
     ,       ete.name                ete_name
     ,       max(frr_agg.agg_error_count) over (partition by frr_agg.adt_id) as max_errors
     from
@@ -83,8 +84,51 @@ with
             group by    frr.ete_id
             ,           fom.adt_id
         ) frr_agg
-    join    icca_error_types ete on frr_agg.ete_id = ete.id
+    join icca_error_types ete on frr_agg.ete_id = ete.id
 )
+, w_frs_complete as (
+    select  all_combinations.adt_id
+    ,       all_combinations.ete_id
+    ,       all_combinations.ete_name
+    ,       nvl(frs.agg_error_count, 0) as agg_error_count
+    ,       (select max(max_errors) from w_frs_actuals where adt_id = all_combinations.adt_id) as max_errors
+    from    (
+        select  distinct adt_id
+        ,       ete.id ete_id
+        ,       ete.name ete_name
+        from    w_fom
+        cross join icca_error_types ete
+    ) all_combinations
+    left join w_frs_actuals frs on (frs.adt_id = all_combinations.adt_id and frs.ete_id = all_combinations.ete_id)
+)
+, w_frs_classes as (
+    select  adt_id
+    ,       case
+                when regexp_like(lower(ete_name),
+                        '^(niet geleegd|niet aangevuld|spinrag|niet gehecht vuil( licht stof)?|niet gehecht vuil methode)$')
+                    then 'Dagelijkse'
+                when regexp_like(lower(ete_name),
+                        '^(aanslag|dicht stof|gehecht vuil( vlek( vingertast)?| methode)?|gehecht vuil vlek,? vingertast)$')
+                    then 'Cumulatief'
+                else 'Diverse'
+            end as class
+    ,       agg_error_count
+    from    w_frs_complete frs
+)
+, w_frs_classes_agg as (
+    select  adt_id
+    ,       class
+    ,       case class
+                when 'Dagelijkse' then 0
+                when 'Cumulatief' then 1
+                else 2
+            end as sort_order
+    ,       sum(agg_error_count) as agg_error_count
+    ,       round(100 * sum(agg_error_count) / nullif(sum(sum(agg_error_count)) over (partition by adt_id),0), 1)  as pct
+    from w_frs_classes
+    group by adt_id, class
+)
+-- select * from w_frs_complete where adt_id = 7722;
 /*
     * Get related audits and current audit
     * If > 6 records keep only top 3 detail records PER audit
@@ -293,53 +337,45 @@ as(
 w_stock_chart
 as
 (
-    select  adt_id
+    select  frs.adt_id
     ,       json_object(
-                        'title'   value 'Stock Chart'
-                    ,   'xAxis'   value  json_array(
-                            json_object(
-                                'title'   value 'XAxis'
-                            ,    'data'    value json_arrayagg(
-                                    json_object(
-                                            'value' value ete_name || chr(10)  ||             LPAD(
-                                                frs.agg_error_count,
-                                                -- The target length for the string is its own length plus the calculated padding
-                                                LENGTH(frs.agg_error_count) + GREATEST(0, ROUND((least(LENGTH(ete_name), 14) - LENGTH(TO_CHAR(frs.agg_error_count))) / 2)),
-                                                ' ' -- The character to pad with (a space)
+                 'title'      value 'Chart Title'
+             ,   'xAxis'   value  json_array(
+                     json_object(
+                          'title'   value 'xAxis'
+                      ,   'data'    value json_array('{"value" : 1}, {"value" : 3}, {"value" : 5}, {"value" : 7}, {"value" : 9} , {"value" : 11}, {"value" : 13}, {"value" : 15}, {"value" : 17}' format json)
+                    )
+                )
+             ,   'yAxis'   value  json_array(
+                     json_object(
+                          'title'   value 'Ytitle'
+                        , 'series'  value json_array(
+                                json_object(
+                                      'name' value 'Cijfer'
+                                  ,   'data'    value json_arrayagg(
+                                            json_object(
+                                                    'value' value frs.agg_error_count
                                             )
-                                    )
-                                )
-                            )
-                        )
-                    ,   'yAxis'   value  json_array(
-                            json_object(
-                                'title'   value 'Ytitle'
-                                , 'series'  value json_array(
-                                        json_object(
-                                            'name' value 'open',
-                                            'data' value json_arrayagg(frs.agg_error_count)
-                                        )
-                                        ,
-                                        json_object(
-                                            'name' value 'high',
-                                            'data' value json_arrayagg(frs.max_errors)
-                                        )
-                                        ,
-                                        json_object(
-                                            'name' value 'low',
-                                            'data' value json_arrayagg(0)
-                                        )
-                                        ,
-                                        json_object(
-                                            'name' value 'close',
-                                            'data' value json_arrayagg(frs.agg_error_count - 1)
+                                            -- * Hardcoded ???
+											order by case ete_name
+												when 'niet gehecht vuil licht stof' then 0
+												when 'niet gehecht vuil methode' 	then 1
+												when 'aanslag' 						then 2
+												when 'dicht stof' 					then 3
+												when 'gehecht vuil methode' 		then 4
+												when 'gehecht vuil vlek vingertast' then 5
+												when 'niet aangevuld' 				then 6
+												when 'niet geleegd' 				then 7
+												when 'spinrag' 						then 8
+                                            end
                                         )
                                 )
-                            )
-                    )
-                    )
-                as chart_spec
-        from    w_frs frs
+                          )
+                      )
+                )
+            )
+             as chart_spec
+        from    w_frs_complete frs
         group by adt_id
 )
 ,
@@ -388,6 +424,43 @@ w_timeline_chart as (
     from    w_adt_related_scores_final rsc
     group by main_adt_id
 )
+,
+w_donut_chart as (
+    select  adt_id
+    ,       json_object(
+                 'title'      value 'Chart Title'
+             ,   'xAxis'   value  json_array(
+                     json_object(
+                          'title'   value 'xAxis'
+                      ,   'data'    value json_array('{"value" : "Dagelijkse"}, {"value" : "Cumulatief"}, {"value" : "Diverse"}' format json)
+                    )
+                )
+             ,   'yAxis'   value  json_array(
+                     json_object(
+                          'title'   value 'Ytitle'
+                        , 'series'  value json_array(
+                                json_object(
+                                      'name' value 'Cijfer'
+                                  ,   'data'    value json_arrayagg(
+                                            json_object(
+                                                    'value' value agg_error_count
+                                            )
+                                            order by sort_order asc
+                                        )
+                                )
+                          )
+                      )
+                )
+            )
+             as chart_spec
+    , json_arrayagg(
+                to_char(pct, 'FM999990.0') || '%'
+                order by sort_order asc
+    ) as donut_pct
+    from    w_frs_classes_agg
+    group by adt_id
+)
+-- select * from w_frs_classes_agg where adt_id = 7724;
 ------------------------------ * Table CTE's *  -------------------------------------
 ,
 w_audit_results_tbl
@@ -482,6 +555,11 @@ select  json_array(
                                   ,   'colChart'                  value json_array(cch.chart_spec)
                                   ,   'stockChart'                value json_array(sch.chart_spec)
                                   ,   'timelineChart'             value json_array(tch.chart_spec)
+                                  ,   'donutChart'                value json_array(dch.chart_spec)
+                                        ------------ * Extra attributes for donut chart * ----------
+                                  ,   'donut_chart_dagelijkse_pct'  value json_query(dch.donut_pct, '$[0]') -- * Dagelijkse
+                                  ,   'donut_chart_cumulatief_pct'  value json_query(dch.donut_pct, '$[1]') -- * Cumulatief
+                                  ,   'donut_chart_diverse_pct'     value '0.0%'                            -- * Diverse
                                 ------------------------------ * Table Data *  -------------------------------------
                                   ,   'audit_results'                       value ars_tbl.tbl_spec
                                   ,   'ruimteniveau_opmerkingen'            value rlc_tbl.tbl_spec
@@ -501,6 +579,7 @@ from w_adt                                  adt
 join w_column_chart                         cch on adt.adt_id = cch.adt_id
 join w_stock_chart                          sch on adt.adt_id = sch.adt_id
 join w_timeline_chart                       tch on adt.adt_id = tch.main_adt_id
+join w_donut_chart                          dch on adt.adt_id = dch.adt_id
 join w_audit_results_tbl                    ars_tbl on ars_tbl.adt_id = adt.adt_id
 join w_room_level_comments_tbl              rlc_tbl on rlc_tbl.adt_id = adt.adt_id
 left join w_general_comments_tbl            gnc_tbl on gnc_tbl.adt_id = adt.adt_id
