@@ -1,3 +1,4 @@
+set define off
 create or replace view icca_aop_report_data_vw
 as
 with
@@ -34,14 +35,14 @@ with
 )
 , w_adt as(
     select
-            trim(to_char(adt.audit_date, 'FMDD Mon YYYY', 'NLS_DATE_LANGUAGE = DUTCH'))             as datum_controle_volledig
+            trim(to_char(adt.last_control_date, 'FMDD Mon YYYY', 'NLS_DATE_LANGUAGE = DUTCH'))      as datum_controle_volledig
         ,   adt.id                                                                                  as adt_id
         ,   cnt.company_name                                                                        as organisatie
         ,   cln.contact_person                                                                      as ter_attentie_van
         ,   cln.name                                                                                as project
         ,   adt.code                                                                                as rapport_nummer
-        ,   adt.audit_date                                                                          as datum_controle
-        ,   to_char(adt.audit_date, 'HH24:MI')                                                      as tijdstip_controle
+        ,   adt.last_control_date                                                                   as datum_controle
+        ,   to_char(adt.last_control_date, 'HH24:MI')                                               as tijdstip_controle
         ,   pfr.controle_door                                                                       as controle_door
         ,   nvl(apt_names, 'n.v.t.')                                                                as aanwezig_leverancier --> double check
         ,   cln.country                                                                             as audit_land
@@ -49,12 +50,14 @@ with
         ,   cln.street_name                                                                         as audit_straatnaam
         ,   cln.id                                                                                  as cln_id
         ,   cnt.id                                                                                  as cnt_id
+        ,   nvl2(doc.file_url, 'https://icca-dashboard.maxapex.net/' || doc.file_url, doc.file_url) as doc_file_url --* Maybe replace with apex_mail.get_instance_url?
     from    icca_audits adt
     join    icca_clients            cnt on adt.cnt_id = cnt.id
     join    icca_client_locations   cln on adt.cln_id = cln.id
+    left join    icca_documents          doc on cnt.logo_id = doc.id
     -- * join on adt_forms may produce multiple rows, so fetch first row as all performers should be the same anyways
-    join    w_pfr                   pfr on (pfr.adt_id = adt.id and rn = 1)
-    left join w_apt                   apt on apt.adt_id = adt.id
+    join        w_pfr                   pfr on (pfr.adt_id = adt.id and rn = 1)
+    left join   w_apt                   apt on apt.adt_id = adt.id
     where   adt.audit_completed = 'Y'
 ) --select * from w_adt;
 , w_adt_results as(
@@ -547,6 +550,9 @@ select  json_array(
                                   ,   'tijdstip_controle'         value adt.tijdstip_controle
                                   ,   'controle_door'             value adt.controle_door
                                   ,   'aanwezig_leverancier'      value adt.aanwezig_leverancier--> double check
+                                  ,   'client_logo'               value adt.doc_file_url
+                                  ,   'client_logo_max_width'              value 225
+                                  ,   'client_logo_max_height'             value 150
                                   ------------------------------ * Pagina 2 * -------------------------------------
                                   ,   'audit_land'                value adt.audit_land
                                   ,   'audit_stad'                value adt.audit_stad
@@ -559,7 +565,7 @@ select  json_array(
                                         ------------ * Extra attributes for donut chart * ----------
                                   ,   'donut_chart_dagelijkse_pct'  value json_query(dch.donut_pct, '$[0]') -- * Dagelijkse
                                   ,   'donut_chart_cumulatief_pct'  value json_query(dch.donut_pct, '$[1]') -- * Cumulatief
-                                  ,   'donut_chart_diverse_pct'     value '0.0%'                            -- * Diverse
+                                  ,   'donut_chart_diverse_pct'     value '0.0%'                            -- * Diverse(hardcoded for now as no error types exist that fall into this category)
                                 ------------------------------ * Table Data *  -------------------------------------
                                   ,   'audit_results'                       value ars_tbl.tbl_spec
                                   ,   'ruimteniveau_opmerkingen'            value rlc_tbl.tbl_spec
