@@ -44,13 +44,15 @@ with
         ,   adt.last_control_date                                                                   as datum_controle
         ,   to_char(adt.last_control_date, 'HH24:MI')                                               as tijdstip_controle
         ,   pfr.controle_door                                                                       as controle_door
-        ,   nvl(apt_names, 'n.v.t.')                                                                as aanwezig_leverancier --> double check
+        ,   nvl(apt_names, 'n.v.t.')                                                                as aanwezig_leverancier
         ,   cln.country                                                                             as audit_land
         ,   cln.city                                                                                as audit_stad
         ,   cln.street_name                                                                         as audit_straatnaam
         ,   cln.id                                                                                  as cln_id
         ,   cnt.id                                                                                  as cnt_id
         ,   nvl2(doc.file_url, 'https://icca-dashboard.maxapex.net/' || doc.file_url, doc.file_url) as doc_file_url --* Maybe replace with apex_mail.get_instance_url?
+        ,   adt.code || '.' || cnt.company_name || '.' || cln.name                                  as report_name
+        ,   cnt.audit_report_type                                                                   as audit_report_type
     from    icca_audits adt
     join    icca_clients            cnt on adt.cnt_id = cnt.id
     join    icca_client_locations   cln on adt.cln_id = cln.id
@@ -549,7 +551,7 @@ select  json_array(
                                   ,   'datum_controle'            value to_char(adt.datum_controle, 'dd-mm-yyyy')
                                   ,   'tijdstip_controle'         value adt.tijdstip_controle
                                   ,   'controle_door'             value adt.controle_door
-                                  ,   'aanwezig_leverancier'      value adt.aanwezig_leverancier--> double check
+                                  ,   'aanwezig_leverancier'      value adt.aanwezig_leverancier
                                   ,   'client_logo'               value adt.doc_file_url
                                   ,   'client_logo_max_width'              value 225
                                   ,   'client_logo_max_height'             value 150
@@ -580,6 +582,8 @@ select  json_array(
                 )
          returning clob)as aop_data
 ,       adt.adt_id adt_id
+,       adt.report_name
+,       adt.audit_report_type
 ,       rlc_tbl.doc_ids
 from w_adt                                  adt
 join w_column_chart                         cch on adt.adt_id = cch.adt_id
