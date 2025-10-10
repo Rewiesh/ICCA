@@ -14,6 +14,7 @@ with
     ,       fom.remark      rmk
     ,       flr.name || ' - ' || trim(ara.abbreviation) || '.' ||  fom.area_number          area_number
     ,       cat.name                                                                        cat_name
+    ,       fom.error_count                                                                 error_count
     from    icca_adt_forms fom
     join    icca_floors         flr on fom.flr_id = flr.id
     join    icca_areas          ara on fom.ara_id = ara.id
@@ -171,6 +172,7 @@ w_adt_related_scores_final as (
     ,       ars.related_adt_code
     ,       ars.related_score
     ,       ars.related_approve_limit
+    ,       avg(ars.related_score) over (partition by main_adt_id order by related_adt_date asc rows between 1 preceding and current row) as rolling_avg
     from    w_adt_related_scores_limited ars
     where   rn_global <= 6
 ) --select * from w_adt_related_scores_final where main_adt_id = 2809; --2809
@@ -178,6 +180,7 @@ w_adt_related_scores_final as (
     select
           adt_id
         , area_number
+        , error_count
         , cat_name
         , epe_name
         , ete_name
@@ -198,6 +201,7 @@ w_adt_related_scores_final as (
         -- (log book rows)
         select  fom.adt_id          as adt_id
         ,       fom.area_number     as area_number
+        ,       fom.error_count     as error_count
         ,       cat_name            as cat_name
         ,       epe.name            as epe_name
         ,       ete.name            as ete_name
@@ -215,6 +219,7 @@ w_adt_related_scores_final as (
         -- (technical aspects rows)
         select  fom.adt_id          as adt_id
         ,       fom.area_number     as area_number
+        ,       fom.error_count     as error_count
         ,       cat_name            as cat_name
         ,       epe.name            as epe_name
         ,       ete.name            as ete_name
@@ -264,18 +269,19 @@ w_fom_doc_grouped as (
     from w_fom_all fom
 )
 , w_fom_detail as (
-    select adt_id,
-        area_number,
-        cat_name,
-        epe_name,
-        ete_name,
-        log_book_remark,
-        listagg(case when doc_id is not null then new_picture_number end, ' + ')
-            within group(order by new_picture_number asc) as picture_number,
-        listagg(case when doc_id is not null then doc_id end, ',')
-            within group(order by new_picture_number asc) as doc_ids
+    select adt_id
+    ,      area_number
+    ,      error_count
+    ,      cat_name
+    ,      epe_name
+    ,      ete_name
+    ,      log_book_remark
+    ,      listagg(case when doc_id is not null then new_picture_number end, ' + ')
+              within group(order by new_picture_number asc) as picture_number
+    ,      listagg(case when doc_id is not null then doc_id end, ',')
+             within group(order by new_picture_number asc) as doc_ids
     from w_fom_doc_ordered
-    group by adt_id, area_number, cat_name, epe_name, ete_name, log_book_remark
+    group by adt_id, area_number, error_count, cat_name, epe_name, ete_name, log_book_remark
     order by min(new_picture_number)
 ) --select * from w_fom_detail where adt_id = 2;
 , w_kpi as (
@@ -422,6 +428,16 @@ w_timeline_chart as (
                                          order by rsc.related_adt_date asc
                                          returning clob )
                                  returning clob )
+                            ,
+                                json_object(
+                                      'name' value '2 per. Zw. Gem.'
+                                  ,    'data'    value json_arrayagg(
+                                            json_object(
+                                                    'value' value rsc.rolling_avg
+                                            )
+                                         order by rsc.related_adt_date asc
+                                         returning clob )
+                                 returning clob )
                            returning clob )
                        returning clob )
                 returning clob )
@@ -446,12 +462,18 @@ w_donut_chart as (
                         , 'series'  value json_array(
                                 json_object(
                                       'name' value 'Cijfer'
-                                  ,   'data'    value json_arrayagg(
-                                            json_object(
-                                                    'value' value agg_error_count
-                                            )
+                                  ,   'data'    value json_transform(
+                                            json_arrayagg(
+                                                json_object(
+                                                        'value' value pct
+                                                )
                                             order by sort_order asc
+                                            )
+                                         , set '$append_data' = '[{"value":0}, {"value":100}]' format json
+                                         , append '$' = path '$append_data[*]'
                                         )
+                        --   ,   'data'    value json_array('{"value" :10}, {"value" : 65}, {"value" : 25},{"value" : 100}' format json)
+
                                 )
                           )
                       )
@@ -491,12 +513,13 @@ as
     ,       listagg(doc_ids, ',') within group(order by picture_number) as doc_ids
     ,       json_arrayagg(
                     json_object(
-                            'ruimte_nr' value area_number
-                        ,   'categorie' value cat_name
-                        ,   'element'   value epe_name
-                        ,   'vuilsoort' value ete_name
-                        ,   'opmerking' value log_book_remark
-                        ,   'foto_nr'   value picture_number
+                            'ruimte_nr'     value area_number
+                        ,   'categorie'     value cat_name
+                        ,   'element'       value epe_name
+                        ,   'vuilsoort'     value ete_name
+                        ,   'opmerking'     value log_book_remark
+                        ,   'aantal_fouten' value error_count
+                        ,   'foto_nr'       value picture_number
                         returning clob )
                 order by picture_number asc
                 returning clob

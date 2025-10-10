@@ -163,6 +163,7 @@ is
                     '<td style="width:'|| case when ( lt_docs.count <= 2 ) then ln_under_three_cell_width else ln_cell_width end ||'; height:' || case when ( lt_docs.count <= 2 ) then ln_under_three_cell_height else ln_cell_height end ||';border:1px solid #dfd81d; vertical-align:middle;">'
                     ----------------------------------------------------** Actual Image **-------------------
                     || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || lt_docs(k).img_data || '" ' --* actual image
+                    -- || '<img src="https://icca-dashboard.maxapex.net/uploads/40686c14742b7285e0630100007f2d9f.jpg" ' --* URL src tst
                     -- || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || 'lv_img_based64' || '" ' --* for logging html
                     -- || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || lv_img_based64 || '" '   --* for testing img
                     || 'style="max-width: ' || ln_cell_width || '; max-height: ' || ln_cell_height || '; width:' || ln_img_width || '; height:' || ln_img_height ||'; object-fit:contain; display:block; border: 1px solid #dfd81d;">'
@@ -241,7 +242,7 @@ is
         sys.htp.init;
         sys.owa_util.mime_header( 'application/pdf', false );
         sys.htp.p('Content-length: ' || sys.dbms_lob.getlength( l_pdf));
-        sys.htp.p('Content-Disposition: inline; filename="' || 'Rapportage ICCA Kwaliteitsmeting.pdf'|| '"' );
+        sys.htp.p('Content-Disposition: inline; filename="' || p_output_filename || '"');
         sys.htp.p('Cache-Control: max-age=10');  -- tell the browser to cache for 10s, adjust as necessary
         sys.owa_util.http_header_close;
         sys.wpg_docload.download_file( l_pdf);
