@@ -74,41 +74,116 @@ as
             return sys.odcivarchar2list();
     end f_parse_email_addresses;
     --
+    -- -----------------------------------------------------------------------------------------
+    -- -- Genereer audit PDF (dummy - vervang later door echte generatie)
+    -- function f_generate_audit_pdf( p_adt_id in number )
+    -- return blob
+    -- is
+    --     l_pdf_blob      blob;
+    --     l_bfile         bfile;
+    --     l_dest_offset   integer := 1;
+    --     l_src_offset    integer := 1;
+    -- begin
+    --     --
+    --     dbms_lob.createtemporary(l_pdf_blob, true);
+    --     --
+    --     l_bfile := bfilename('ICCA_UPLOADS', '10871.ASKO DC.AMS Test.pdf');
+    --     dbms_lob.fileopen(l_bfile, dbms_lob.file_readonly);
+    --     --
+    --     dbms_lob.loadblobfromfile(
+    --         dest_lob    => l_pdf_blob,
+    --         src_bfile   => l_bfile,
+    --         amount      => dbms_lob.lobmaxsize,
+    --         dest_offset => l_dest_offset,
+    --         src_offset  => l_src_offset
+    --     );
+    --     --
+    --     dbms_lob.fileclose(l_bfile);
+    --     --
+    --     return l_pdf_blob;
+    --     --
+    -- exception
+    --     when others then
+    --         if dbms_lob.isopen(l_bfile) = 1 then
+    --             dbms_lob.fileclose(l_bfile);
+    --         end if;
+    --         raise;
+    -- end f_generate_audit_pdf;
+    --
     -----------------------------------------------------------------------------------------
-    -- Genereer audit PDF (dummy - vervang later door echte generatie)
+    -- Genereer audit PDF via bestaande AOP infrastructuur
     function f_generate_audit_pdf( p_adt_id in number )
     return blob
     is
-        l_pdf_blob      blob;
-        l_bfile         bfile;
-        l_dest_offset   integer := 1;
-        l_src_offset    integer := 1;
+        l_pdf_blob          blob;
+        l_output_filename   varchar2(255);
+        l_data_source       clob;
+        l_binds             wwv_flow_plugin_util.t_bind_list;
     begin
         --
-        dbms_lob.createtemporary(l_pdf_blob, true);
+        -- Bepaal output filename
+        l_output_filename := 'ICCA_Audit_' || p_adt_id || '.pdf';
         --
-        l_bfile := bfilename('ICCA_UPLOADS', '10871.ASKO DC.AMS Test.pdf');
-        dbms_lob.fileopen(l_bfile, dbms_lob.file_readonly);
+        -- Haal AOP data source SQL op (EXACT dezelfde als in je process)
+        l_data_source := q'[
+    with w_data as (
+        select  aop_data
+        ,       doc_ids
+        from    icca_aop_report_data_vw
+        where   adt_id = :P_ADT_ID
+    )
+    , w_all as(
+        select  aop_data
+        ,       doc_ids
+        from    w_data
+    )
+    select  case when doc_ids is not null then json_transform (
+                    aop_data
+                ,   set '$.data[0].htmlContent' = icca_aop_pdf.f_get_imgs_html(doc_ids)
+                    returning clob
+            ) else aop_data end as aop_data
+    from    w_all
+    ]';
         --
-        dbms_lob.loadblobfromfile(
-            dest_lob    => l_pdf_blob,
-            src_bfile   => l_bfile,
-            amount      => dbms_lob.lobmaxsize,
-            dest_offset => l_dest_offset,
-            src_offset  => l_src_offset
+        -- Bind parameter (HANDMATIG vullen)
+        l_binds(1).name  := 'P_ADT_ID';
+        l_binds(1).value := p_adt_id;
+        --
+        -- Roep AOP aan (EXACT zoals in je APEX process maar dan naar BLOB)
+        l_pdf_blob := aop_api_pkg.plsql_call_to_aop(
+            p_data_type       => aop_api_pkg.c_source_type_sql,
+            p_data_source     => l_data_source,
+            p_template_type   => aop_api_pkg.c_source_type_apex,
+            p_template_source => 'rapportage_kwaliteitsmeting_template.docx',
+            p_output_type     => aop_api_pkg.c_pdf_pdf,
+            p_output_filename => l_output_filename,
+            p_binds           => l_binds,
+            p_aop_url         => 'https://api.apexofficeprint.com/',     -- Haal uit config
+            p_api_key         => '361ACD26CA57F476E0637203000ACB44',  -- Haal uit config
+            p_app_id          => 100 
         );
         --
-        dbms_lob.fileclose(l_bfile);
+        -- Log success
+        logger.log_info(
+            p_text  => 'Audit PDF gegenereerd via AOP',
+            p_scope => 'icca_audit_mail.f_generate_audit_pdf',
+            p_extra => 'ADT_ID=' || p_adt_id || 
+                    ', SIZE=' || dbms_lob.getlength(l_pdf_blob) || ' bytes'
+        );
         --
         return l_pdf_blob;
         --
     exception
         when others then
-            if dbms_lob.isopen(l_bfile) = 1 then
-                dbms_lob.fileclose(l_bfile);
-            end if;
+            logger.log_error(
+                p_text  => 'Error in f_generate_audit_pdf',
+                p_scope => 'icca_audit_mail.f_generate_audit_pdf',
+                p_extra => 'ADT_ID=' || p_adt_id || 
+                        ', ERROR=' || sqlerrm ||
+                        ', BACKTRACE=' || dbms_utility.format_error_backtrace
+            );
             raise;
-    end f_generate_audit_pdf;
+    end f_generate_audit_pdf;    
     --
     -----------------------------------------------------------------------------------------
     -- Verstuur audit rapport mail naar meerdere ontvangers
