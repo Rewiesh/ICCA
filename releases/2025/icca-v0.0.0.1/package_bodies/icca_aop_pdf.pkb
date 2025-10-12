@@ -8,8 +8,10 @@ is
         cursor c_get_docs(b_doc_ids varchar2, b_row_size number)
         is
             with w_img_data as(
-                select  apex_web_service.blob2clobbase64(image_data) as img_data
-                ,       row_number() over (order by id) as rn
+                -- select  apex_web_service.blob2clobbase64(image_data) as img_data
+                select 'https://icca-dashboard.maxapex.net/' || doc.file_url as img_data
+                ,       rownum                                       as rn
+                ,       id                                           as id
                 ,       mime_type
                 from    icca_documents doc
                 join    (
@@ -22,11 +24,13 @@ is
                                         -- apex_string.split('281,284,555,666,777,888', ',')
                             )
                 )
+            order by rn asc
             )
            ,    w_img_rows as (
                     select  ceil(rn / b_row_size )                as row_num
                     ,       max(ceil(rn / b_row_size )) over()    as max_row_num
                     ,       rn
+                    ,       id                                     as id
                     ,       mime_type
                     ,       img_data
                     from    w_img_data
@@ -125,7 +129,6 @@ is
         lc_html := '<table style="width:auto; max-height: 1cm; margin:0 auto;text-align: center; border-collapse: separate; border-spacing: 40px 10px;">';
 
         for i in 1..lt_docs.count by ln_const_col_cnt loop
-
           dbms_lob.append(lc_html, '<tr>');
 
             -- Header Text(and styling)
@@ -160,7 +163,8 @@ is
                 dbms_lob.append(lc_html,
                     '<td style="width:'|| case when ( lt_docs.count <= 2 ) then ln_under_three_cell_width else ln_cell_width end ||'; height:' || case when ( lt_docs.count <= 2 ) then ln_under_three_cell_height else ln_cell_height end ||';border:1px solid #dfd81d; vertical-align:middle;">'
                     ----------------------------------------------------** Actual Image **-------------------
-                    || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || lt_docs(k).img_data || '" ' --* actual image
+                    -- || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || lt_docs(k).img_data || '" ' --* actual image
+                    || '<img src="'|| lt_docs(k).img_data ||'" ' --* URL src tst
                     -- || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || 'lv_img_based64' || '" ' --* for logging html
                     -- || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || lv_img_based64 || '" '   --* for testing img
                     || 'style="max-width: ' || ln_cell_width || '; max-height: ' || ln_cell_height || '; width:' || ln_img_width || '; height:' || ln_img_height ||'; object-fit:contain; display:block; border: 1px solid #dfd81d;">'
@@ -218,7 +222,7 @@ is
 
        dbms_lob.append(lc_html, '</table>');
 
-        print_clob(lc_html);
+        -- print_clob(lc_html);
 
 
         return lc_html;
@@ -239,7 +243,7 @@ is
         sys.htp.init;
         sys.owa_util.mime_header( 'application/pdf', false );
         sys.htp.p('Content-length: ' || sys.dbms_lob.getlength( l_pdf));
-        sys.htp.p('Content-Disposition: inline; filename="' || 'Rapportage ICCA Kwaliteitsmeting.pdf'|| '"' );
+        sys.htp.p('Content-Disposition: inline; filename="' || p_output_filename || '"');
         sys.htp.p('Cache-Control: max-age=10');  -- tell the browser to cache for 10s, adjust as necessary
         sys.owa_util.http_header_close;
         sys.wpg_docload.download_file( l_pdf);
