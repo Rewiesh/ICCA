@@ -1,6 +1,7 @@
 CREATE TABLE Users_Auditor (
-    Phone NVARCHAR2(4000),
-    Mobile NVARCHAR2(4000),
-    Id RAW(20) NOT NULL,
-    usr_id number
+    Phone     VARCHAR2(50),      -- WAS: NVARCHAR2(4000)
+    Mobile    VARCHAR2(50),      -- WAS: NVARCHAR2(4000)
+    Id        RAW(20) NOT NULL,
+    usr_id    NUMBER,
+    aud_id    NUMBER             -- Voeg dit toe voor migratie tracking
 );

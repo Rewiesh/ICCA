@@ -8,6 +8,7 @@ create table icca_performers(
     ,   last_name           varchar2(100)
     ,   phone_number        varchar2(255)
     ,   mobile_number       varchar2(255)
+    ,   profile_pic_id      number
     ,   migrated_data       varchar2(1 char) default 'N'                            not null
     ,   created_date        date            default sysdate                         not null
     ,   created_by          varchar2(50)                                            not null
@@ -20,3 +21,5 @@ alter table icca_performers add constraint icca_pfr_usr_fk1 foreign key(usr_id) 
 -- indexes
 create unique index icca_pfr_usr_id_uk_idx1 on icca_performers (usr_id);
 create unique index icca_pfr_first_last_name_uk_idx2 on icca_performers (upper(first_name), upper(last_name));
+drop index icca_pfr_first_last_name_uk_idx2;
+alter table icca_performers add profile_pic_id number;

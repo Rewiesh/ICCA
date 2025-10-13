@@ -625,53 +625,28 @@ is
     --
     --
     -----------------------------------------------------------------------------------------
-    -- Dummy function: genereer audit PDF (tijdelijk - later vervangen door echte PDF generatie)
-    function f_generate_audit_pdf( p_adt_id in number )
-    return blob
+    --
+    function f_array_to_string(
+        p_array in sys.odcivarchar2list,
+        p_separator in varchar2 default ','
+    ) return varchar2
     is
-        l_pdf_blob      blob;
-        l_bfile         bfile;
-        l_dest_offset   integer := 1;
-        l_src_offset    integer := 1;
+        l_result varchar2(4000);
     begin
-        -- maak lege blob
-        dbms_lob.createtemporary(l_pdf_blob, true);
-        --
-        -- lees pdf van server (tijdelijk testbestand)
-        l_bfile := bfilename('ICCA_UPLOADS', '10871.ASKO DC.AMS Test.pdf');
-        --
-        -- open bestand
-        dbms_lob.fileopen(l_bfile, dbms_lob.file_readonly);
-        --
-        -- laad in blob
-        dbms_lob.loadblobfromfile(
-            dest_lob    => l_pdf_blob,
-            src_bfile   => l_bfile,
-            amount      => dbms_lob.lobmaxsize,
-            dest_offset => l_dest_offset,
-            src_offset  => l_src_offset
-        );
-        --
-        -- sluit bestand
-        dbms_lob.fileclose(l_bfile);
-        --
-        return l_pdf_blob;
-        --
-    exception
-        when others then
-            if dbms_lob.isopen(l_bfile) = 1 then
-                dbms_lob.fileclose(l_bfile);
+        if p_array is null or p_array.count = 0 then
+            return null;
+        end if;
+        
+        for i in 1 .. p_array.count loop
+            if i = 1 then
+                l_result := p_array(i);
+            else
+                l_result := l_result || p_separator || p_array(i);
             end if;
-            --
-            logger.log_error(
-                p_text  => 'Error in f_generate_audit_pdf',
-                p_scope => 'icca_audit_post_api.f_generate_audit_pdf',
-                p_extra => 'ADT_ID=' || p_adt_id || 
-                        ', ERROR=' || sqlerrm ||
-                        ', BACKTRACE=' || dbms_utility.format_error_backtrace
-            );
-            raise;
-    end f_generate_audit_pdf;    
+        end loop;
+        
+        return l_result;
+    end f_array_to_string;  
     --
     --
     -----------------------------------------------------------------------------------------
@@ -704,11 +679,8 @@ is
         
         -- variables
         lr_audit_data       c_get_audit_data%rowtype;
-        l_pdf_blob          blob;
-        l_pdf_filename      varchar2(255);
-        l_recipients        sys.odcivarchar2list := sys.odcivarchar2list();
-        l_contact_person    varchar2(255);
-        l_mail_log_id       number;
+        l_email_addresses   varchar2(4000);
+        l_temp_emails       sys.odcivarchar2list := sys.odcivarchar2list();
     begin
         -- Haal audit gegevens op
         open    c_get_audit_data( b_adt_id => p_adt_id );
@@ -726,79 +698,51 @@ is
         
         close c_get_audit_data;
         
-        -- Bepaal ontvangers (locatie email en/of user email)
+        -- Verzamel ontvangers (locatie email en/of user email)
         if lr_audit_data.cln_email is not null then
-            l_recipients.extend;
-            l_recipients(l_recipients.count) := lr_audit_data.cln_email;
+            l_temp_emails.extend;
+            l_temp_emails(l_temp_emails.count) := lr_audit_data.cln_email;
         end if;
         
         if lr_audit_data.usr_email is not null and 
         (lr_audit_data.cln_email is null or lr_audit_data.usr_email != lr_audit_data.cln_email) then
-            l_recipients.extend;
-            l_recipients(l_recipients.count) := lr_audit_data.usr_email;
+            l_temp_emails.extend;
+            l_temp_emails(l_temp_emails.count) := lr_audit_data.usr_email;
         end if;
         
         -- Voeg ICCA email ALTIJD toe als extra ontvanger
-        l_recipients.extend;
-        l_recipients(l_recipients.count) := gc_icca_email;
+        l_temp_emails.extend;
+        l_temp_emails(l_temp_emails.count) := gc_icca_email;
         
-        -- Bepaal contactpersoon voor mail (prioriteit: locatie > klant)
-        l_contact_person := coalesce(
-            lr_audit_data.cln_contact_person, 
-            lr_audit_data.cnt_contact_person,
-            'geachte relatie'
-        );
+        -- Converteer array naar comma-separated string
+        l_email_addresses := f_array_to_string(l_temp_emails);
         
-        -- Genereer PDF rapport
-        l_pdf_blob := f_generate_audit_pdf( p_adt_id => p_adt_id );
-        
-        -- Stel PDF filename samen
-        l_pdf_filename := 'ICCA_Audit_' || 
-                        lr_audit_data.code || '_' || 
-                        replace(lr_audit_data.location_name, ' ', '_') || 
-                        '.pdf';
-        
-        -- Verstuur mail via icca_mail package
-        icca_mail.p_send_template_with_pdf(
-            p_template_name => 'AUDIT_REPORT_GENERATED',
-            p_to            => l_recipients,
-            p_pdf_blob      => l_pdf_blob,
-            p_pdf_filename  => l_pdf_filename,
-            p_param01       => lr_audit_data.code,
-            p_param02       => lr_audit_data.location_name,
-            p_param03       => to_char(lr_audit_data.audit_date, 'DD-MM-YYYY'),
-            p_param04       => l_contact_person,
-            po_log_id       => l_mail_log_id
-        );
-        
-        -- Log success
+        -- Log welke emails verstuurd worden
         logger.log_info(
-            p_text  => 'Audit mail succesvol verstuurd',
+            p_text  => 'Start audit mail verzending via API',
             p_scope => 'icca_audit_post_api.p_send_audit_mail',
             p_extra => 'ADT_ID=' || p_adt_id || 
                     ', CODE=' || lr_audit_data.code ||
-                    ', RECIPIENTS=' || l_recipients.count ||
-                    ', MAIL_LOG_ID=' || l_mail_log_id
+                    ', EMAILS=' || l_email_addresses
         );
         
-        -- Ruim blob op
-        if l_pdf_blob is not null and dbms_lob.istemporary(l_pdf_blob) = 1 then
-            dbms_lob.freetemporary(l_pdf_blob);
-        end if;
+        -- Roep de centrale audit mail procedure aan
+        icca_audit_mail.p_send_audit_report(
+            p_adt_id          => p_adt_id,
+            p_email_addresses => l_email_addresses
+        );
+        
+        -- Log success (de details worden gelogd in p_send_audit_report)
+        logger.log_info(
+            p_text  => 'Audit mail via API succesvol afgerond',
+            p_scope => 'icca_audit_post_api.p_send_audit_mail',
+            p_extra => 'ADT_ID=' || p_adt_id
+        );
         
     exception
         when others then
-            -- Ruim blob op bij error
-            begin
-                if l_pdf_blob is not null and dbms_lob.istemporary(l_pdf_blob) = 1 then
-                    dbms_lob.freetemporary(l_pdf_blob);
-                end if;
-            exception
-                when others then null;
-            end;
-            --
             logger.log_error(
-                p_text  => 'Fout bij versturen audit mail (processing gaat door)',
+                p_text  => 'Fout bij versturen audit mail via API (processing gaat door)',
                 p_scope => 'icca_audit_post_api.p_send_audit_mail',
                 p_extra => 'ADT_ID=' || p_adt_id || 
                         ', ERROR=' || sqlerrm ||

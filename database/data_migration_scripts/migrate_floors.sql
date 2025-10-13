@@ -10,7 +10,7 @@ declare
         ;
     --
     -- variables
-    type t_old_data is table of c_get_old_data%rowtype;
+    type t_old_data is table of c_get_old_data%rowtype;    
     --
     lt_old_data t_old_data;
     ln_flr_id number;

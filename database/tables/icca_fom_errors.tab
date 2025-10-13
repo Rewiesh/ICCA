@@ -23,3 +23,7 @@ alter table icca_fom_errors add constraint icca_for_epe_fk1 foreign key(epe_id) 
 --
 alter table icca_fom_errors add constraint icca_for_doc_fk4 foreign key(log_book_image_id) references icca_documents(id);
 alter table icca_fom_errors add constraint icca_for_doc_fk5 foreign key(technical_aspects_image_id) references icca_documents(id);
+--
+alter table icca_fom_errors add remark varchar2(4000);
+alter table icca_fom_errors add added_default_ete_id varchar2(1 char);
+alter table icca_fom_errors add added_default_epe_id varchar2(1 char);

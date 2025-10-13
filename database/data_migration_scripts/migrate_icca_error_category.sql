@@ -13,7 +13,7 @@ declare
     --
     lt_old_data t_old_data;
     ln_ece_id number;
-begin
+begin     
     --
     -- get old data
     open    c_get_old_data;

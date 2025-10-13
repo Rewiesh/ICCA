@@ -34,6 +34,6 @@ begin
                 dbms_output.put_line('Skipping empty client name for adt_id ' || lt_old_data(i).adt_id);
             end if;
         end loop;
-    end loop;
+    end loop;   
 end;
 /

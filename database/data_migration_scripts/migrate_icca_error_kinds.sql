@@ -15,7 +15,7 @@ declare
     ln_ekd_id number;
 begin
     --
-    -- get old data
+    -- get old data      
     open    c_get_old_data;
     fetch   c_get_old_data bulk collect into lt_old_data;
     close   c_get_old_data;

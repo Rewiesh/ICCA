@@ -1,17 +1,17 @@
 CREATE TABLE Users_Client (
-    CompanyName       NVARCHAR2(4000) NOT NULL,
-    ContactPerson     NVARCHAR2(4000),
-    Phone             NVARCHAR2(4000),
-    Mobile            NVARCHAR2(4000),
-    Fax               NVARCHAR2(4000),
-    StreetName        NVARCHAR2(4000),
-    ZipCode           NVARCHAR2(4000),
-    City              NVARCHAR2(4000),
-    State             NVARCHAR2(4000),
+    CompanyName       VARCHAR2(4000) NOT NULL,
+    ContactPerson     NVARCHAR2(2000),      -- WAS: 4000
+    Phone             NVARCHAR2(100),        -- WAS: 4000 (realistischer)
+    Mobile            NVARCHAR2(100),        -- WAS: 4000 (realistischer)
+    Fax               NVARCHAR2(100),        -- WAS: 4000 (realistischer)
+    StreetName        NVARCHAR2(500),        -- WAS: 4000 (realistischer)
+    ZipCode           NVARCHAR2(20),         -- WAS: 4000 (realistischer)
+    City              NVARCHAR2(200),        -- WAS: 4000 (realistischer)
+    State             NVARCHAR2(200),        -- WAS: 4000 (realistischer)
     CountryId         RAW(16),
     Id                RAW(20) NOT NULL,
     Branch_Id         RAW(16),
     URLClientPortal   NVARCHAR2(100),
     ReportType        NUMBER(10) NOT NULL,
-    cnt_id            number
+    cnt_id            NUMBER
 );

@@ -5,6 +5,9 @@
         },
         {
             "path": "../../../QualityTesting"
+        },
+        {
+            "path": "../../../ICCA Datamigratie PRD"
         }
     ]
 }

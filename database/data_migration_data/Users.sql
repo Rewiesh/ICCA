@@ -14,7 +14,8 @@ INSERT INTO Users (Id, UserName, FirstName, LastName, ProfileImage) VALUES
 (hextoraw(replace('562e46c4-97d7-449f-b204-01c4b3321813', '-', '')), 'rivve01', 'Ria', 'van Veldhuizen', NULL);
 
 INSERT INTO Users (Id, UserName, FirstName, LastName, ProfileImage) VALUES
-(hextoraw(replace('194f8b91-a636-4ab5-859a-0211127470b6', '-', '')), 'saam', NULL, NULL, hextoraw(replace('0569ea65-9e48-4194-8b97-5249c9923f0e', '-', '')));
+(hextoraw(replace('194f8b91-a636-4ab5-859a-0211127470b6', '-', '')), 'saam', NULL, NULL, hextoraw(replace('0569ea65-9e48-4194-8b97-5249c9923f0e', '-', ''))
+);
 
 INSERT INTO Users (Id, UserName, FirstName, LastName, ProfileImage) VALUES
 (hextoraw(replace('d144e397-020a-4c40-9c00-0241f67a8277', '-', '')), 'sr', NULL, NULL, hextoraw(replace('73f92825-dc53-40b6-86fd-c79b73841414', '-', '')));

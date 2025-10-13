@@ -1,0 +1,8 @@
+CREATE TABLE Images (
+    ImageId             RAW(16) NOT NULL,
+    ImageDataLocation   VARCHAR2(100) NOT NULL,
+    ImageMimeType       VARCHAR2(20) NOT NULL,
+    doc_id              number
+);
+
+INTO IMAGES (ImageId, ImageDataLocation, ImageMimeType)
