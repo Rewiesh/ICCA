@@ -70,6 +70,54 @@ create or replace package body icca_file_upload as
             end if;
             raise;
     end f_save_uploaded_file;
-
+    --
+    -----------------------------------------------------------------------------------------
+    -- Save and register document
+    function f_save_and_register_document(
+        p_blob          in blob
+    ,   p_filename      in varchar2
+    ,   p_mime_type     in varchar2 default 'image/png'
+    ,   p_document_name in varchar2 default null
+    ) 
+    return number
+    is
+        l_file_url      varchar2(500);
+        l_doc_id        number;
+        l_doc_name      varchar2(500);
+    begin
+        -- Stap 1: Upload bestand naar file system
+        l_file_url := f_save_uploaded_file(
+            p_blob      => p_blob
+        ,   p_filename  => p_filename
+        ,   p_mime_type => p_mime_type
+        );
+        
+        -- Bepaal document naam
+        l_doc_name := coalesce(p_document_name, p_filename);
+        
+        -- Stap 2: Insert in icca_documenten tabel
+        insert into icca_documents (
+                name
+            ,   mime_type
+            ,   file_url
+        )
+        values (
+                l_doc_name
+            ,   p_mime_type
+            ,   l_file_url
+        )
+        returning id into l_doc_id;
+        
+        commit;
+        
+        return l_doc_id;
+        
+    exception
+        when others then
+            rollback;
+            raise;
+    end f_save_and_register_document;
+    --
+    -----------------------------------------------------------------------------------------
 end icca_file_upload;
 /
