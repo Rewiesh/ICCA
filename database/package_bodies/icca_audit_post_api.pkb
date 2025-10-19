@@ -270,6 +270,7 @@ is
     procedure p_update_audit(   p_pfr_id                in number   
                             ,   p_adt_id                in number 
                             ,   p_signature_image_id    in number 
+                            ,   p_last_control_date     in date
                             )
     is
     begin
@@ -278,6 +279,7 @@ is
         set     pfr_id              = p_pfr_id
         ,       audit_completed     = 'Y'
         ,       signature_image_id  = p_signature_image_id
+        ,       last_control_date   = p_last_control_date
         where   id = p_adt_id
         ;
         --
@@ -602,7 +604,7 @@ is
         ln_adt_id := p_audit.id;
         --
         -- update audit to completed
-        p_update_audit( p_pfr_id => p_pfr_id, p_adt_id => ln_adt_id , p_signature_image_id => p_audit.signature_image_id );
+        p_update_audit( p_pfr_id => p_pfr_id, p_adt_id => ln_adt_id , p_signature_image_id => p_audit.signature_image_id, p_last_control_date => p_audit.audit_date );
         -- --
         -- insert clients die aanwezig waren tijden de audit 
         p_create_audit_present_clients( p_adt_id            => ln_adt_id
@@ -662,27 +664,34 @@ is
             ,       adt.cnt_id
             ,       cnt.company_name
             ,       cnt.contact_person       as cnt_contact_person
+            ,       cnt.usr_id
             ,       cln.id                   as cln_id
             ,       cln.name                 as location_name
             ,       cln.contact_person       as cln_contact_person
             ,       cln.email                as cln_email
-            ,       usr.email                as usr_email
+            ,       listagg(ueml.email, ',') within group (order by ueml.created_date desc) as usr_emails
             from    icca_audits             adt
             join    icca_clients            cnt on cnt.id = adt.cnt_id
             join    icca_client_locations   cln on cln.id = adt.cln_id
-            join    icca_users              usr on usr.id = cnt.usr_id
+            left join icca_usr_emails       ueml on ueml.usr_id = cnt.usr_id
             where   adt.id = b_adt_id
+            group by adt.id, adt.code, adt.audit_date, adt.cnt_id, 
+                    cnt.company_name, cnt.contact_person, cnt.usr_id,
+                    cln.id, cln.name, cln.contact_person, cln.email
             ;
         
         -- constants
-        gc_icca_email constant varchar2(100) := 'info@iccaadvies.eu';
+        -- gc_icca_email constant varchar2(100) := 'info@iccaadvies.eu';
+        gc_icca_email constant varchar2(100) := 'ramcharanrewiesh98@hotmail.com';
         
         -- variables
         lr_audit_data       c_get_audit_data%rowtype;
         l_email_addresses   varchar2(4000);
         l_temp_emails       sys.odcivarchar2list := sys.odcivarchar2list();
+        l_forms_count       number := 0;
     begin
-        -- Haal audit gegevens op
+        --
+        -- Check 1: Bestaat de audit?
         open    c_get_audit_data( b_adt_id => p_adt_id );
         fetch   c_get_audit_data into lr_audit_data;
         
@@ -693,24 +702,66 @@ is
                 p_scope => 'icca_audit_post_api.p_send_audit_mail',
                 p_extra => 'ADT_ID=' || p_adt_id
             );
-            return;
+            return;  -- Stop, maar geen error
         end if;
         
         close c_get_audit_data;
         
-        -- Verzamel ontvangers (locatie email en/of user email)
+        --
+        -- Check 2: Zijn er forms voor deze audit?
+        begin
+            select  count(*)
+            into    l_forms_count
+            from    icca_adt_forms
+            where   adt_id = p_adt_id
+            ;
+        exception
+            when no_data_found then
+                l_forms_count := 0;
+        end;
+        
+        if l_forms_count = 0 then
+            logger.log_info(
+                p_text  => 'Geen forms gevonden voor audit - mail verzending overgeslagen',
+                p_scope => 'icca_audit_post_api.p_send_audit_mail',
+                p_extra => 'ADT_ID=' || p_adt_id || 
+                        ', CODE=' || lr_audit_data.code
+            );
+            return;  -- Stop, maar geen error
+        end if;
+        
+        logger.log_info(
+            p_text  => 'Forms check geslaagd',
+            p_scope => 'icca_audit_post_api.p_send_audit_mail',
+            p_extra => 'ADT_ID=' || p_adt_id || 
+                    ', FORMS_COUNT=' || l_forms_count
+        );
+        
+        --
+        -- Verzamel ontvangers
+        -- 1. Locatie email
         if lr_audit_data.cln_email is not null then
             l_temp_emails.extend;
-            l_temp_emails(l_temp_emails.count) := lr_audit_data.cln_email;
+            l_temp_emails(l_temp_emails.count) := trim(lr_audit_data.cln_email);
         end if;
         
-        if lr_audit_data.usr_email is not null and 
-        (lr_audit_data.cln_email is null or lr_audit_data.usr_email != lr_audit_data.cln_email) then
-            l_temp_emails.extend;
-            l_temp_emails(l_temp_emails.count) := lr_audit_data.usr_email;
+        -- 2. User emails (kan meerdere zijn, comma-separated)
+        if lr_audit_data.usr_emails is not null then
+            -- Split de comma-separated usr_emails en voeg elk toe
+            for rec in (
+                select distinct trim(regexp_substr(lr_audit_data.usr_emails, '[^,]+', 1, level)) as email
+                from   dual
+                connect by level <= regexp_count(lr_audit_data.usr_emails, ',') + 1
+            ) loop
+                if rec.email is not null and rec.email != nvl(lr_audit_data.cln_email, 'X') then
+                    -- Voeg alleen toe als niet duplicate van locatie email
+                    l_temp_emails.extend;
+                    l_temp_emails(l_temp_emails.count) := rec.email;
+                end if;
+            end loop;
         end if;
         
-        -- Voeg ICCA email ALTIJD toe als extra ontvanger
+        -- 3. ICCA email ALTIJD als extra ontvanger
         l_temp_emails.extend;
         l_temp_emails(l_temp_emails.count) := gc_icca_email;
         
@@ -723,7 +774,9 @@ is
             p_scope => 'icca_audit_post_api.p_send_audit_mail',
             p_extra => 'ADT_ID=' || p_adt_id || 
                     ', CODE=' || lr_audit_data.code ||
-                    ', EMAILS=' || l_email_addresses
+                    ', EMAILS=' || l_email_addresses ||
+                    ', EMAIL_COUNT=' || l_temp_emails.count ||
+                    ', FORMS_COUNT=' || l_forms_count
         );
         
         -- Roep de centrale audit mail procedure aan
@@ -732,7 +785,7 @@ is
             p_email_addresses => l_email_addresses
         );
         
-        -- Log success (de details worden gelogd in p_send_audit_report)
+        -- Log success
         logger.log_info(
             p_text  => 'Audit mail via API succesvol afgerond',
             p_scope => 'icca_audit_post_api.p_send_audit_mail',

@@ -323,7 +323,7 @@ is
         set    template_id = lr_template.id
         where  id = po_log_id;
         --
-        commit;
+        -- commit;
         --
     exception
         when others then

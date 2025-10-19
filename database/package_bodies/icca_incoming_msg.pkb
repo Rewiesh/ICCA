@@ -36,10 +36,15 @@ is
                                     ,   po_ige_id       out number
                                     )
     is
+        lv_msg varchar2(100);
     begin
+        if (p_api_endpoint like 'api/postImage/%')
+        then
+            lv_msg := 'image to upload';
+        end if;
         --
         insert into icca_incoming_messages( pfr_id, api_method, api_endpoint, message )
-            values ( p_pfr_id, p_api_method, p_api_endpoint, p_msg )
+            values ( p_pfr_id, p_api_method, p_api_endpoint, case when p_api_endpoint like 'api/postImage/%' then to_clob(lv_msg) else p_msg end )
             returning id into po_ige_id;
         --            
         commit;

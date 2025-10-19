@@ -45,7 +45,7 @@ as
         -- cursors
         cursor c_get_area_elements( b_ara_id in number )
         is
-            select  id
+            select  era.epe_id id
             from    icca_epe_areas era
             where   era.ara_id = b_ara_id
             ;

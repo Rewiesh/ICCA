@@ -74,43 +74,6 @@ as
             return sys.odcivarchar2list();
     end f_parse_email_addresses;
     --
-    -- -----------------------------------------------------------------------------------------
-    -- -- Genereer audit PDF (dummy - vervang later door echte generatie)
-    -- function f_generate_audit_pdf( p_adt_id in number )
-    -- return blob
-    -- is
-    --     l_pdf_blob      blob;
-    --     l_bfile         bfile;
-    --     l_dest_offset   integer := 1;
-    --     l_src_offset    integer := 1;
-    -- begin
-    --     --
-    --     dbms_lob.createtemporary(l_pdf_blob, true);
-    --     --
-    --     l_bfile := bfilename('ICCA_UPLOADS', '10871.ASKO DC.AMS Test.pdf');
-    --     dbms_lob.fileopen(l_bfile, dbms_lob.file_readonly);
-    --     --
-    --     dbms_lob.loadblobfromfile(
-    --         dest_lob    => l_pdf_blob,
-    --         src_bfile   => l_bfile,
-    --         amount      => dbms_lob.lobmaxsize,
-    --         dest_offset => l_dest_offset,
-    --         src_offset  => l_src_offset
-    --     );
-    --     --
-    --     dbms_lob.fileclose(l_bfile);
-    --     --
-    --     return l_pdf_blob;
-    --     --
-    -- exception
-    --     when others then
-    --         if dbms_lob.isopen(l_bfile) = 1 then
-    --             dbms_lob.fileclose(l_bfile);
-    --         end if;
-    --         raise;
-    -- end f_generate_audit_pdf;
-    --
-    -----------------------------------------------------------------------------------------
     -- Genereer audit PDF
     function f_generate_audit_pdf( p_adt_id in number )
     return blob
@@ -130,7 +93,7 @@ as
         
         lr_adt_rpt c_get_rpt_data%rowtype;
     begin
-        -- Bepaal output filename
+        -- Bepaal output filename -- dummy
         l_output_filename := 'ICCA_Audit_' || p_adt_id || '.pdf';
         
         -- Haal report type op via audit -> client

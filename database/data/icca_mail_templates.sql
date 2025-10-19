@@ -139,3 +139,148 @@ when not matched then
     insert (system_name, name, description, subject, body_plain, body_html, created_by)
     values (s.system_name, s.name, s.description, s.subject, s.body_plain, s.body_html, 'SYSTEM');
 commit;
+
+-- Template: Nieuwe gebruiker account (Performers - Mobile App)
+merge into icca_mail_templates t
+using (
+    select 
+        'NEW_USER_ACCOUNT_PERFORMER' as system_name,
+        'Nieuwe gebruiker account (Performer)' as name,
+        'Mail die verstuurd wordt wanneer een nieuwe performer wordt aangemaakt voor mobile app' as description,
+        'Welkom bij ICCA Mobile - Uw inloggegevens' as subject,
+        null as body_plain,
+        '<html><head><style>' ||
+        'body{font-family:Arial,sans-serif;font-size:14px;color:#333;margin:0;padding:0;background-color:#f4f6f9}' ||
+        '.container{max-width:600px;margin:0 auto;background:white}' ||
+        '.logo-container{width:100%;overflow:hidden;max-height:200px;background-color:#f8f9fa}' ||
+        '.logo{width:100%;height:200px;object-fit:cover;object-position:center}' ||
+        '.greeting{padding:25px;background:#fff}' ||
+        '.credentials-box{background-color:#10b981;padding:25px;color:white;margin:20px 25px;border-radius:8px}' ||
+        '.credentials-box h2{margin:0 0 20px 0;color:white;font-size:20px;text-align:center}' ||
+        '.credentials-box p{margin:12px 0;font-size:15px}' ||
+        '.credentials-box .label{font-size:13px;opacity:0.9;margin-bottom:5px}' ||
+        '.credentials-box .value{font-family:monospace;font-size:20px;font-weight:bold;background:rgba(255,255,255,0.2);padding:12px;border-radius:4px;letter-spacing:1px;word-break:break-all}' ||
+        '.content{padding:25px}' ||
+        '.info-box{background-color:#ecfdf5;border-left:4px solid:#10b981;padding:15px;margin:20px 0;border-radius:4px;color:#065f46}' ||
+        '.app-icon{text-align:center;padding:20px;font-size:48px}' ||
+        '.footer{background:#f7fafc;padding:20px;font-size:11px;color:#1d2022;text-align:center;border-top:1px solid #e1e8ed}' ||
+        '.company{color:#10b981;font-weight:bold}' ||
+        'a{color:#10b981;text-decoration:none}' ||
+        '</style></head><body>' ||
+        '<div class="container">' ||
+        '<div class="logo-container">' ||
+        '<img src="https://icca-dashboard.maxapex.net/uploads/iccamaillogo.jpg" alt="ICCA Advies" class="logo">' ||
+        '</div>' ||
+        '<div class="greeting">' ||
+        '<p><strong>Welkom bij ICCA Mobile,</strong></p>' ||
+        '<p>Er is een account voor u aangemaakt in de ICCA Mobile App. Hieronder vindt u uw persoonlijke inloggegevens.</p>' ||
+        '</div>' ||
+        '<div class="credentials-box">' ||
+        '<h2>Uw inloggegevens</h2>' ||
+        '<div class="label">Gebruikersnaam</div>' ||
+        '<div class="value">#P1#</div>' ||
+        '<div class="label" style="margin-top:20px">Wachtwoord</div>' ||
+        '<div class="value">#P2#</div>' ||
+        '</div>' ||
+        '<div class="content">' ||
+        '<p>Heeft u vragen over uw account of het gebruik van de app? Neem dan contact met ons op via <a href="mailto:info@iccaadvies.eu">info@iccaadvies.eu</a></p>' ||
+        '<p>Met vriendelijke groet,<br><br><strong>Het ICCA Team</strong></p>' ||
+        '</div>' ||
+        '<div class="footer">' ||
+        '<p><span class="company">ICCA Advies</span><br>Kwaliteitscontrole &amp; Advies</p>' ||
+        '<p>E-mail: <a href="mailto:info@iccaadvies.eu">info@iccaadvies.eu</a></p>' ||
+        '<p>Deze mail is automatisch gegenereerd</p>' ||
+        '</div>' ||
+        '</div>' ||
+        '</body></html>' as body_html
+    from dual
+) s
+on (t.system_name = s.system_name)
+when matched then
+    update set 
+        t.name = s.name,
+        t.description = s.description,
+        t.subject = s.subject,
+        t.body_plain = s.body_plain,
+        t.body_html = s.body_html,
+        t.modified_date = sysdate,
+        t.modified_by = 'SYSTEM'
+when not matched then
+    insert (system_name, name, description, subject, body_plain, body_html, created_by)
+    values (s.system_name, s.name, s.description, s.subject, s.body_plain, s.body_html, 'SYSTEM');
+commit;
+
+
+----
+-- Template: Nieuwe gebruiker account (Beheerders & Klanten - Web App)
+merge into icca_mail_templates t
+using (
+    select 
+        'NEW_USER_ACCOUNT' as system_name,
+        'Nieuwe gebruiker account' as name,
+        'Mail die verstuurd wordt wanneer een nieuwe gebruiker wordt aangemaakt voor web app' as description,
+        'Welkom bij ICCA Dashboard - Uw inloggegevens' as subject,
+        null as body_plain,
+        '<html><head><style>' ||
+        'body{font-family:Arial,sans-serif;font-size:14px;color:#333;margin:0;padding:0;background-color:#f4f6f9}' ||
+        '.container{max-width:600px;margin:0 auto;background:white}' ||
+        '.logo-container{width:100%;overflow:hidden;max-height:200px;background-color:#f8f9fa}' ||
+        '.logo{width:100%;height:200px;object-fit:cover;object-position:center}' ||
+        '.greeting{padding:25px;background:#fff}' ||
+        '.credentials-box{background-color:#3b82f6;padding:25px;color:white;margin:20px 25px;border-radius:8px}' ||
+        '.credentials-box h2{margin:0 0 20px 0;color:white;font-size:20px;text-align:center}' ||
+        '.credentials-box p{margin:12px 0;font-size:15px}' ||
+        '.credentials-box .label{font-size:13px;opacity:0.9;margin-bottom:5px}' ||
+        '.credentials-box .value{font-family:monospace;font-size:20px;font-weight:bold;background:rgba(255,255,255,0.2);padding:12px;border-radius:4px;letter-spacing:1px;word-break:break-all}' ||
+        '.content{padding:25px}' ||
+        '.info-box{background-color:#f0f9ff;border-left:4px solid #3b82f6;padding:15px;margin:20px 0;border-radius:4px}' ||
+        '.footer{background:#f7fafc;padding:20px;font-size:11px;color:#1d2022;text-align:center;border-top:1px solid #e1e8ed}' ||
+        '.company{color:#3b82f6;font-weight:bold}' ||
+        'a{color:#3b82f6;text-decoration:none}' ||
+        '</style></head><body>' ||
+        '<div class="container">' ||
+        '<div class="logo-container">' ||
+        '<img src="https://icca-dashboard.maxapex.net/uploads/iccamaillogo.jpg" alt="ICCA Advies" class="logo">' ||
+        '</div>' ||
+        '<div class="greeting">' ||
+        '<p><strong>Welkom bij ICCA Dashboard,</strong></p>' ||
+        '<p>Er is een account voor u aangemaakt in het ICCA Dashboard. Hieronder vindt u uw persoonlijke inloggegevens.</p>' ||
+        '</div>' ||
+        '<div class="credentials-box">' ||
+        '<h2>Uw inloggegevens</h2>' ||
+        '<div class="label">Gebruikersnaam</div>' ||
+        '<div class="value">#P1#</div>' ||
+        '<div class="label" style="margin-top:20px">Tijdelijk wachtwoord</div>' ||
+        '<div class="value">#P2#</div>' ||
+        '</div>' ||
+        '<div class="content">' ||
+        '<p>U kunt nu inloggen op het <a href="https://icca-dashboard.maxapex.net/ords/r/icca/icca/login-page">ICCA Dashboard</a> met bovenstaande gegevens.</p>' ||
+        '<div class="info-box">' ||
+        '<strong>Let op:</strong> Bij uw eerste login moet u dit tijdelijke wachtwoord wijzigen naar een persoonlijk wachtwoord voor uw veiligheid.' ||
+        '</div>' ||
+        '<p>Heeft u vragen over uw account of het gebruik van het dashboard? Neem dan contact met ons op via <a href="mailto:info@iccaadvies.eu">info@iccaadvies.eu</a></p>' ||
+        '<p>Met vriendelijke groet,<br><br><strong>Het ICCA Team</strong></p>' ||
+        '</div>' ||
+        '<div class="footer">' ||
+        '<p><span class="company">ICCA Advies</span><br>Kwaliteitscontrole &amp; Advies</p>' ||
+        '<p>E-mail: <a href="mailto:info@iccaadvies.eu">info@iccaadvies.eu</a></p>' ||
+        '<p>Deze mail is automatisch gegenereerd</p>' ||
+        '</div>' ||
+        '</div>' ||
+        '</body></html>' as body_html
+    from dual
+) s
+on (t.system_name = s.system_name)
+when matched then
+    update set 
+        t.name = s.name,
+        t.description = s.description,
+        t.subject = s.subject,
+        t.body_plain = s.body_plain,
+        t.body_html = s.body_html,
+        t.modified_date = sysdate,
+        t.modified_by = 'SYSTEM'
+when not matched then
+    insert (system_name, name, description, subject, body_plain, body_html, created_by)
+    values (s.system_name, s.name, s.description, s.subject, s.body_plain, s.body_html, 'SYSTEM');
+commit;

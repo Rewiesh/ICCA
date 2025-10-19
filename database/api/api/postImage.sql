@@ -51,13 +51,13 @@ begin
     insert into icca_documents (
             name
         ,   mime_type
-        ,   image_data
+        -- ,   image_data
         ,   file_url
     )
     values (
             'image.jpg'            -- Je kan dit dynamisch maken als je bestandsnaam meestuurt
         ,   'image/png'            -- idem: mime-type kan uit headers komen of extra veld
-        ,   v_audit_data
+        -- ,   v_audit_data
         ,   v_file_url
     )
     returning id into v_doc_id;
