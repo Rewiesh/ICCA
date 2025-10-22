@@ -241,6 +241,7 @@ w_adt_related_scores_final as (
     select  count(grp_rank) max_cnt
     ,       adt_id
     ,       grp_rank from w_fom_all
+    where   doc_id is not null
     group by adt_id, grp_rank
 )
 -- select * from w_fom_doc_cnt where adt_id = 7722;
@@ -276,6 +277,7 @@ w_fom_doc_grouped as (
     ,      epe_name
     ,      ete_name
     ,      log_book_remark
+    ,      min(new_picture_number) pic_rnk
     ,      listagg(case when doc_id is not null then new_picture_number end, ' + ')
               within group(order by new_picture_number asc) as picture_number
     ,      listagg(case when doc_id is not null then doc_id end, ',')
@@ -510,7 +512,7 @@ as
 as
 (
     select  adt_id      adt_id
-    ,       listagg(doc_ids, ',') within group(order by picture_number) as doc_ids
+    ,       listagg(doc_ids, ',') within group(order by pic_rnk) as doc_ids
     ,       json_arrayagg(
                     json_object(
                             'ruimte_nr'     value area_number
@@ -521,7 +523,7 @@ as
                         ,   'aantal_fouten' value error_count
                         ,   'foto_nr'       value picture_number
                         returning clob )
-                order by picture_number asc
+                order by pic_rnk asc
                 returning clob
             ) as tbl_spec
     from        w_fom_detail
