@@ -80,18 +80,10 @@ as
     is
         l_pdf_blob          blob;
         l_output_filename   varchar2(255);
-        l_json_data         clob;
         l_template_name     varchar2(255);
         l_report_type       varchar2(100);
-        
-        -- Cursor om data op te halen
-        cursor c_get_rpt_data( b_adt_id in number )
-        is
-            select  json_query(aop_data, '$.data' returning clob) as json_data
-            from    icca_aop_report_data_vw
-            where   adt_id = b_adt_id;
-        
-        lr_adt_rpt c_get_rpt_data%rowtype;
+        l_query             varchar2(4000);
+        l_binds             wwv_flow_plugin_util.t_bind_list;
     begin
         -- Bepaal output filename -- dummy
         l_output_filename := 'ICCA_Audit_' || p_adt_id || '.pdf';
@@ -131,38 +123,55 @@ as
                     ', TEMPLATE=' || l_template_name
         );
         
-        -- Haal JSON data op via cursor
-        open    c_get_rpt_data(b_adt_id => p_adt_id);
-        fetch   c_get_rpt_data into lr_adt_rpt;
-        close   c_get_rpt_data;
+        -- Definieer SQL query EXACT zoals in APEX versie (met foto transformatie)
+        l_query := q'[
+            with w_data as (
+                select  aop_data
+                ,       doc_ids
+                ,       audit_report_type
+                from    icca_aop_report_data_vw
+                where   adt_id = :P_ADT_ID
+            )
+            select case when doc_ids is not null then json_transform (
+                        aop_data
+                    ,   set '$.data[0].htmlContent' = icca_aop_pdf.f_get_imgs_html(doc_ids)
+                        returning clob
+                ) else aop_data end as aop_data
+            from    w_data
+        ]';
         
-        -- Check of data gevonden is
-        if lr_adt_rpt.json_data is null then
+        -- Setup binds
+        l_binds(1).name  := 'P_ADT_ID';
+        l_binds(1).value := p_adt_id;
+        
+        -- Roep AOP aan EXACT zoals in APEX versie
+        l_pdf_blob := aop_api_pkg.plsql_call_to_aop(
+            p_data_type       => aop_api_pkg.c_source_type_sql,      -- SQL ipv JSON!
+            p_data_source     => l_query,                             -- Query ipv CLOB
+            p_template_type   => aop_api_pkg.c_source_type_apex,
+            p_template_source => l_template_name,
+            p_app_id          => 100,
+            p_output_type     => aop_api_pkg.c_pdf_pdf,
+            p_output_filename => l_output_filename,
+            p_aop_url         => 'https://api.apexofficeprint.com/',
+            p_api_key         => '361ACD26CA57F476E0637203000ACB44',
+            p_binds           => l_binds,                             -- Binds toegevoegd!
+            p_aop_mode        => 'development'
+        );
+        
+        -- Check of PDF gegenereerd is
+        if l_pdf_blob is null then
             logger.log_warn(
-                p_text  => 'Geen audit data gevonden voor PDF generatie',
+                p_text  => 'Geen PDF gegenereerd',
                 p_scope => 'icca_audit_mail.f_generate_audit_pdf',
                 p_extra => 'ADT_ID=' || p_adt_id
             );
             return null;
         end if;
         
-        -- Roep AOP aan met JSON data en dynamische template
-        l_pdf_blob := aop_api_pkg.plsql_call_to_aop(
-            p_data_type       => aop_api_pkg.c_source_type_json,
-            p_data_source     => lr_adt_rpt.json_data,
-            p_template_type   => aop_api_pkg.c_source_type_apex,
-            p_template_source => l_template_name,  -- Dynamisch!
-            p_app_id          => 100,
-            p_output_type     => aop_api_pkg.c_pdf_pdf,
-            p_output_filename => l_output_filename,
-            p_aop_url         => 'https://api.apexofficeprint.com/',
-            p_api_key         => '361ACD26CA57F476E0637203000ACB44',
-            p_aop_mode        => 'development'
-        );
-        
         -- Log success
         logger.log_info(
-            p_text  => 'Audit PDF gegenereerd via AOP',
+            p_text  => 'Audit PDF gegenereerd via AOP (met foto''s)',
             p_scope => 'icca_audit_mail.f_generate_audit_pdf',
             p_extra => 'ADT_ID=' || p_adt_id || 
                     ', TEMPLATE=' || l_template_name ||
@@ -294,26 +303,26 @@ as
                       ', MAIL_LOG_ID=' || l_mail_log_id
         );
         
-    -- exception
-    --     when others then
-    --         -- Cleanup
-    --         begin
-    --             if l_pdf_blob is not null and dbms_lob.istemporary(l_pdf_blob) = 1 then
-    --                 dbms_lob.freetemporary(l_pdf_blob);
-    --             end if;
-    --         exception
-    --             when others then null;
-    --         end;
-    --         --
-    --         logger.log_error(
-    --             p_text  => 'Error in p_send_audit_report',
-    --             p_scope => 'icca_audit_mail.p_send_audit_report',
-    --             p_extra => 'ADT_ID=' || p_adt_id ||
-    --                       ', EMAILS=' || p_email_addresses ||
-    --                       ', ERROR=' || sqlerrm ||
-    --                       ', BACKTRACE=' || dbms_utility.format_error_backtrace
-    --         );
-    --         raise;
+    exception
+        when others then
+            -- Cleanup
+            begin
+                if l_pdf_blob is not null and dbms_lob.istemporary(l_pdf_blob) = 1 then
+                    dbms_lob.freetemporary(l_pdf_blob);
+                end if;
+            exception
+                when others then null;
+            end;
+            --
+            logger.log_error(
+                p_text  => 'Error in p_send_audit_report',
+                p_scope => 'icca_audit_mail.p_send_audit_report',
+                p_extra => 'ADT_ID=' || p_adt_id ||
+                          ', EMAILS=' || p_email_addresses ||
+                          ', ERROR=' || sqlerrm ||
+                          ', BACKTRACE=' || dbms_utility.format_error_backtrace
+            );
+            -- raise;
     end p_send_audit_report;
     --
 end icca_audit_mail;
