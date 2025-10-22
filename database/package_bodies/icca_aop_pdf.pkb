@@ -7,24 +7,24 @@ is
     is
         cursor c_get_docs(b_doc_ids varchar2, b_row_size number)
         is
-            with w_img_data as(
-                -- select  apex_web_service.blob2clobbase64(image_data) as img_data
+            with w_docs_list as (
+                select  column_value as id
+                ,       rownum       as rn
+                from    table(
+                            apex_string.split(b_doc_ids, ',')
+                )
+            ),
+            w_img_data as(
                 select 'https://icca-dashboard.maxapex.net/' || doc.file_url as img_data
-                ,       rownum                                       as rn
-                ,       id                                           as id
-                ,       mime_type
+                ,       doc.id                                           as id
+                ,       docs_list.rn                                     as rn
+                ,       mime_type                                        as mime_type
                 from    icca_documents doc
+                join    w_docs_list docs_list on docs_list.id = doc.id
                 join    (
                     select 1 from dual connect by level <= nvl(p_duplicate_number, 1)
                 ) on (1=1)
-                where   id in (
-                            select  column_value as id
-                            from    table(
-                                        apex_string.split(b_doc_ids, ',')
-                                        -- apex_string.split('281,284,555,666,777,888', ',')
-                            )
-                )
-            order by rn asc
+            order by docs_list.rn asc
             )
            ,    w_img_rows as (
                     select  ceil(rn / b_row_size )                as row_num
