@@ -59,7 +59,7 @@ with
     join    icca_client_locations   cln on adt.cln_id = cln.id
     left join    icca_documents          doc on cnt.logo_id = doc.id
     -- * join on adt_forms may produce multiple rows, so fetch first row as all performers should be the same anyways
-    join        w_pfr                   pfr on (pfr.adt_id = adt.id and rn = 1)
+    left join   w_pfr                   pfr on (pfr.adt_id = adt.id and rn = 1)
     left join   w_apt                   apt on apt.adt_id = adt.id
     where   adt.audit_completed = 'Y'
 ) --select * from w_adt;
@@ -148,10 +148,10 @@ with
     ,       ars.score                   related_score
     ,       ars.approve_limit           related_approve_limit
     ,       row_number() over (
-                partition by adt_related.adt_id
+                partition by  adt_main.adt_id, adt_related.adt_id
                 order by adt_related.datum_controle desc
             ) as rn_related
-        ,   count(*) over (partition by adt_main.adt_id) as total_rows
+        -- ,   count(*) over (partition by adt_main.adt_id) as total_rows
     from    w_adt           adt_main
     join    w_adt           adt_related on ( adt_main.cln_id = adt_related.cln_id and adt_main.datum_controle >= adt_related.datum_controle ) --* Ensure main adt_id is also included
     join    w_adt_results   ars         on ars.adt_id = adt_related.adt_id
@@ -161,9 +161,9 @@ w_adt_related_scores_limited as(
     select  ars.*
     ,       row_number() over (partition by main_adt_id order by related_adt_date desc) as rn_global
     from    w_adt_related_scores ars
-    where ((rn_related <= 3 and total_rows > 6)
-    or    (total_rows <= 6))
+    where   ars.rn_related <= 3
 )
+-- select * from  w_adt_related_scores_limited where main_adt_id = 10936;
 ,
 w_adt_related_scores_final as (
     select  ars.main_adt_id
@@ -175,7 +175,8 @@ w_adt_related_scores_final as (
     ,       avg(ars.related_score) over (partition by main_adt_id order by related_adt_date asc rows between 1 preceding and current row) as rolling_avg
     from    w_adt_related_scores_limited ars
     where   rn_global <= 6
-) --select * from w_adt_related_scores_final where main_adt_id = 2809; --2809
+)
+-- select * from w_adt_related_scores_final where main_adt_id = 10936; --2809
 , w_fom_all as (
     select
           adt_id
@@ -341,11 +342,58 @@ as(
                           )
                       )
                 )
+                returning clob
             )
              as chart_spec
     from    w_adt_results ars
     group by adt_id
 )
+/*
+    Hardcoded jsons that will be queried with a nvl when no data found for original column chart data
+*/
+, w_fallback_column_chart
+as(
+    select      json_array('
+                    {
+                        "title": "Chart Title",
+                        "xAxis": [
+                            {
+                                "title": "xAxis",
+                                "data": [
+                                    {
+                                        "value": ""
+                                    }
+                                ]
+                            }
+                        ],
+                        "yAxis": [
+                            {
+                                "title": "Ytitle",
+                                "series": [
+                                    {
+                                        "name": "Cijfer",
+                                        "data": [
+                                            {
+                                                "value": 0
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "Goedkeurgrens",
+                                        "data": [
+                                            {
+                                                "value": 0
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }' format json returning clob)
+             as chart_spec
+    from    dual
+)
+-- select * from w_fallback_column_chart;
 ,
 w_stock_chart
 as
@@ -390,6 +438,92 @@ as
              as chart_spec
         from    w_frs_complete frs
         group by adt_id
+)
+,
+w_fallback_stock_chart as (
+    select json_array(
+    '
+    {
+    "title": "Chart Title",
+    "xAxis": [
+        {
+            "title": "xAxis",
+            "data": [
+                {
+                    "value": 1
+                },
+                {
+                    "value": 3
+                },
+                {
+                    "value": 5
+                },
+                {
+                    "value": 7
+                },
+                {
+                    "value": 9
+                },
+                {
+                    "value": 11
+                },
+                {
+                    "value": 13
+                },
+                {
+                    "value": 15
+                },
+                {
+                    "value": 17
+                }
+            ]
+        }
+    ],
+    "yAxis": [
+        {
+            "title": "Ytitle",
+            "series": [
+                {
+                    "name": "Cijfer",
+                    "data": [
+                        {
+                            "value": 0
+                        },
+                        {
+                            "value": 0
+                        },
+                        {
+                            "value": 0
+                        },
+                        {
+                            "value": 0
+                        },
+                        {
+                            "value": 0
+                        },
+                        {
+                            "value": 0
+                        },
+                        {
+                            "value": 0
+                        },
+                        {
+                            "value": 0
+                        },
+                        {
+                            "value": 0
+                        },
+                        {
+                            "value": 0
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+    }'
+    format json returning clob) chart_spec
+    from dual
 )
 ,
 w_timeline_chart as (
@@ -446,6 +580,41 @@ w_timeline_chart as (
             returning clob) as chart_spec
     from    w_adt_related_scores_final rsc
     group by main_adt_id
+)
+,
+w_fallback_timeline_chart as (
+    select  id adt_id
+    ,       json_array(
+                json_object(
+                        'title'      value 'Chart Title'
+                    ,   'xAxis'   value  json_array(
+                            json_object(
+                                'title'   value 'xAxis'
+                            ,    'data'    value json_array(
+                                    json_object(
+                                            'value' value to_char(adt.last_control_date, 'dd/mm/yy') || chr(13) || '    ' || adt.code
+                                    )
+                                )
+                            )
+                        )
+                    ,   'yAxis'   value  '[
+                    {
+                        "title": "Ytitle",
+                        "series": [
+                        {
+                            "name": "Cijfer",
+                            "data": [
+                            {
+                                "value": ""
+                            }
+                            ]
+                        }
+                        ]
+                    }
+                    ]'
+                format json )
+            returning clob ) as chart_spec
+    from icca_audits adt
 )
 ,
 w_donut_chart as (
@@ -585,23 +754,45 @@ select  json_array(
                                   ,   'audit_stad'                value adt.audit_stad
                                   ,   'audit_straatnaam'          value adt.audit_straatnaam
                                 ------------------------------ * Chart Data *  -------------------------------------
-                                  ,   'colChart'                  value json_array(cch.chart_spec)
-                                  ,   'stockChart'                value json_array(sch.chart_spec)
-                                  ,   'timelineChart'             value json_array(tch.chart_spec)
-                                  ,   'donutChart'                value json_array(dch.chart_spec)
-                                        ------------ * Extra attributes for donut chart * ----------
-                                  ,   'donut_chart_dagelijkse_pct'  value json_query(dch.donut_pct, '$[0]') -- * Dagelijkse
-                                  ,   'donut_chart_cumulatief_pct'  value json_query(dch.donut_pct, '$[1]') -- * Cumulatief
-                                  ,   'donut_chart_diverse_pct'     value '0.0%'                            -- * Diverse(hardcoded for now as no error types exist that fall into this category)
-                                ------------------------------ * Table Data *  -------------------------------------
-                                  ,   'audit_results'                       value ars_tbl.tbl_spec
-                                  ,   'ruimteniveau_opmerkingen'            value rlc_tbl.tbl_spec
-                                  ,   'algemene_opmerkingen'                value gnc_tbl.tbl_spec
-                                  ,   'overige_hygienische_aspecten'        value ohc_tbl.tbl_spec
-                                  ,   'ruimteniveau_opmerkingen_distribute' value true              --* Forgot what this does
-                                ------------------------------ * HTML Data *  -------------------------------------
-                                  ,   'htmlContent_use_tag_style'               value true
-                                  ,   'htmlbettercontent_ignore_cell_margin'    value true
+                                  ,   'colChart'                  value case
+                                                                            when dbms_lob.substr(json_array(cch.chart_spec returning clob), 2, 1) = '[]'
+                                                                            then (select chart_spec from w_fallback_column_chart)
+                                                                            else json_array(cch.chart_spec returning clob)
+                                                                        end
+                                  ,   'stockChart'                value case
+                                                                            when dbms_lob.substr(json_array(sch.chart_spec returning clob), 2, 1) = '[]'
+                                                                            then (select chart_spec from w_fallback_stock_chart)
+                                                                            else json_array(sch.chart_spec returning clob)
+                                                                        end
+                                  ,   'timelineChart'             value case
+                                                                            when dbms_lob.substr(json_array(tch.chart_spec returning clob), 2, 1) = '[]'
+                                                                            /*
+                                                                                Default for this chart is set via the template
+                                                                            */
+                                                                            else json_array(tch.chart_spec returning clob)
+                                                                        end
+                                --   ,   'donutChart'                value json_array(dch.chart_spec)
+                                  ,   'donutChart'                value case
+                                                                            when dbms_lob.substr(json_array(dch.chart_spec returning clob), 2, 1) = '[]'
+                                                                            /*
+                                                                                Default for this chart is set via the template
+                                                                            */
+                                                                            then (null)
+                                                                            else json_array(dch.chart_spec returning clob)
+                                                                        end
+                                --         ------------ * Extra attributes for donut chart * ----------
+                                --   ,   'donut_chart_dagelijkse_pct'  value json_query(dch.donut_pct, '$[0]') -- * Dagelijkse
+                                --   ,   'donut_chart_cumulatief_pct'  value json_query(dch.donut_pct, '$[1]') -- * Cumulatief
+                                --   ,   'donut_chart_diverse_pct'     value '0.0%'                            -- * Diverse(hardcoded for now as no error types exist that fall into this category)
+                                -- ------------------------------ * Table Data *  -------------------------------------
+                                --   ,   'audit_results'                       value ars_tbl.tbl_spec
+                                --   ,   'ruimteniveau_opmerkingen'            value rlc_tbl.tbl_spec
+                                --   ,   'algemene_opmerkingen'                value gnc_tbl.tbl_spec
+                                --   ,   'overige_hygienische_aspecten'        value ohc_tbl.tbl_spec
+                                --   ,   'ruimteniveau_opmerkingen_distribute' value true              --* Forgot what this does
+                                -- ------------------------------ * HTML Data *  -------------------------------------
+                                --   ,   'htmlContent_use_tag_style'               value true
+                                --   ,   'htmlbettercontent_ignore_cell_margin'    value true
                                 )
                             )
                 )
@@ -609,15 +800,15 @@ select  json_array(
 ,       adt.adt_id adt_id
 ,       adt.report_name
 ,       adt.audit_report_type
-,       rlc_tbl.doc_ids
+,       null as doc_ids --rlc_tbl.doc_ids
 from w_adt                                  adt
-join w_column_chart                         cch on adt.adt_id = cch.adt_id
-join w_stock_chart                          sch on adt.adt_id = sch.adt_id
-join w_timeline_chart                       tch on adt.adt_id = tch.main_adt_id
-join w_donut_chart                          dch on adt.adt_id = dch.adt_id
-join w_audit_results_tbl                    ars_tbl on ars_tbl.adt_id = adt.adt_id
-join w_room_level_comments_tbl              rlc_tbl on rlc_tbl.adt_id = adt.adt_id
-left join w_general_comments_tbl            gnc_tbl on gnc_tbl.adt_id = adt.adt_id
-left join w_other_and_hygienic_comments_tbl ohc_tbl on ohc_tbl.adt_id = adt.adt_id
+left join w_column_chart                    cch on adt.adt_id = cch.adt_id
+left join w_stock_chart                     sch on adt.adt_id = sch.adt_id
+left join w_timeline_chart                  tch on adt.adt_id = tch.main_adt_id
+left join w_donut_chart                     dch on adt.adt_id = dch.adt_id
+-- left join w_audit_results_tbl               ars_tbl on ars_tbl.adt_id = adt.adt_id
+-- left join w_room_level_comments_tbl         rlc_tbl on rlc_tbl.adt_id = adt.adt_id
+-- left join w_general_comments_tbl            gnc_tbl on gnc_tbl.adt_id = adt.adt_id
+-- left join w_other_and_hygienic_comments_tbl ohc_tbl on ohc_tbl.adt_id = adt.adt_id
 ;
 
