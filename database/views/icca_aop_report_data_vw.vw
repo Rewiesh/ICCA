@@ -667,7 +667,7 @@ select  json_array(
 ,       adt.adt_id adt_id
 ,       adt.report_name
 ,       adt.audit_report_type
-,       null as doc_ids --rlc_tbl.doc_ids
+,       rlc_tbl.doc_ids
 from w_adt                                  adt
 left join w_column_chart                    cch on adt.adt_id = cch.adt_id
 left join w_stock_chart                     sch on adt.adt_id = sch.adt_id
