@@ -348,52 +348,6 @@ as(
     from    w_adt_results ars
     group by adt_id
 )
-/*
-    Hardcoded jsons that will be queried with a nvl when no data found for original column chart data
-*/
-, w_fallback_column_chart
-as(
-    select      json_array('
-                    {
-                        "title": "Chart Title",
-                        "xAxis": [
-                            {
-                                "title": "xAxis",
-                                "data": [
-                                    {
-                                        "value": ""
-                                    }
-                                ]
-                            }
-                        ],
-                        "yAxis": [
-                            {
-                                "title": "Ytitle",
-                                "series": [
-                                    {
-                                        "name": "Cijfer",
-                                        "data": [
-                                            {
-                                                "value": 0
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "name": "Goedkeurgrens",
-                                        "data": [
-                                            {
-                                                "value": 0
-                                            }
-                                        ]
-                                    }
-                                ]
-                            }
-                        ]
-                    }' format json returning clob)
-             as chart_spec
-    from    dual
-)
--- select * from w_fallback_column_chart;
 ,
 w_stock_chart
 as
@@ -438,92 +392,6 @@ as
              as chart_spec
         from    w_frs_complete frs
         group by adt_id
-)
-,
-w_fallback_stock_chart as (
-    select json_array(
-    '
-    {
-    "title": "Chart Title",
-    "xAxis": [
-        {
-            "title": "xAxis",
-            "data": [
-                {
-                    "value": 1
-                },
-                {
-                    "value": 3
-                },
-                {
-                    "value": 5
-                },
-                {
-                    "value": 7
-                },
-                {
-                    "value": 9
-                },
-                {
-                    "value": 11
-                },
-                {
-                    "value": 13
-                },
-                {
-                    "value": 15
-                },
-                {
-                    "value": 17
-                }
-            ]
-        }
-    ],
-    "yAxis": [
-        {
-            "title": "Ytitle",
-            "series": [
-                {
-                    "name": "Cijfer",
-                    "data": [
-                        {
-                            "value": 0
-                        },
-                        {
-                            "value": 0
-                        },
-                        {
-                            "value": 0
-                        },
-                        {
-                            "value": 0
-                        },
-                        {
-                            "value": 0
-                        },
-                        {
-                            "value": 0
-                        },
-                        {
-                            "value": 0
-                        },
-                        {
-                            "value": 0
-                        },
-                        {
-                            "value": 0
-                        },
-                        {
-                            "value": 0
-                        }
-                    ]
-                }
-            ]
-        }
-    ]
-    }'
-    format json returning clob) chart_spec
-    from dual
 )
 ,
 w_timeline_chart as (
@@ -756,43 +624,42 @@ select  json_array(
                                 ------------------------------ * Chart Data *  -------------------------------------
                                   ,   'colChart'                  value case
                                                                             when dbms_lob.substr(json_array(cch.chart_spec returning clob), 2, 1) = '[]'
-                                                                            then (select chart_spec from w_fallback_column_chart)
+                                                                            -- Set default via template
+                                                                            then (null)
                                                                             else json_array(cch.chart_spec returning clob)
                                                                         end
                                   ,   'stockChart'                value case
                                                                             when dbms_lob.substr(json_array(sch.chart_spec returning clob), 2, 1) = '[]'
-                                                                            then (select chart_spec from w_fallback_stock_chart)
+                                                                            -- Set default via template
+                                                                            then (null)
                                                                             else json_array(sch.chart_spec returning clob)
                                                                         end
                                   ,   'timelineChart'             value case
                                                                             when dbms_lob.substr(json_array(tch.chart_spec returning clob), 2, 1) = '[]'
-                                                                            /*
-                                                                                Default for this chart is set via the template
-                                                                            */
+                                                                            -- Set default via query
+                                                                            then (select chart_spec from w_fallback_timeline_chart ftc where ftc.adt_id = adt.adt_id )
                                                                             else json_array(tch.chart_spec returning clob)
                                                                         end
                                 --   ,   'donutChart'                value json_array(dch.chart_spec)
                                   ,   'donutChart'                value case
                                                                             when dbms_lob.substr(json_array(dch.chart_spec returning clob), 2, 1) = '[]'
-                                                                            /*
-                                                                                Default for this chart is set via the template
-                                                                            */
+                                                                            -- Set default via template
                                                                             then (null)
                                                                             else json_array(dch.chart_spec returning clob)
                                                                         end
                                 --         ------------ * Extra attributes for donut chart * ----------
-                                --   ,   'donut_chart_dagelijkse_pct'  value json_query(dch.donut_pct, '$[0]') -- * Dagelijkse
-                                --   ,   'donut_chart_cumulatief_pct'  value json_query(dch.donut_pct, '$[1]') -- * Cumulatief
-                                --   ,   'donut_chart_diverse_pct'     value '0.0%'                            -- * Diverse(hardcoded for now as no error types exist that fall into this category)
+                                  ,   'donut_chart_dagelijkse_pct'  value nvl(json_value(dch.donut_pct, '$[0]'), '0%')  -- * Dagelijkse
+                                  ,   'donut_chart_cumulatief_pct'  value nvl(json_value(dch.donut_pct, '$[1]'), '0%')  -- * Cumulatief
+                                  ,   'donut_chart_diverse_pct'     value '0.0%'                            -- * Diverse(hardcoded for now as no error types exist that fall into this category)
                                 -- ------------------------------ * Table Data *  -------------------------------------
-                                --   ,   'audit_results'                       value ars_tbl.tbl_spec
-                                --   ,   'ruimteniveau_opmerkingen'            value rlc_tbl.tbl_spec
-                                --   ,   'algemene_opmerkingen'                value gnc_tbl.tbl_spec
-                                --   ,   'overige_hygienische_aspecten'        value ohc_tbl.tbl_spec
-                                --   ,   'ruimteniveau_opmerkingen_distribute' value true              --* Forgot what this does
-                                -- ------------------------------ * HTML Data *  -------------------------------------
-                                --   ,   'htmlContent_use_tag_style'               value true
-                                --   ,   'htmlbettercontent_ignore_cell_margin'    value true
+                                  ,   'audit_results'                       value ars_tbl.tbl_spec
+                                  ,   'ruimteniveau_opmerkingen'            value rlc_tbl.tbl_spec
+                                  ,   'algemene_opmerkingen'                value gnc_tbl.tbl_spec
+                                  ,   'overige_hygienische_aspecten'        value ohc_tbl.tbl_spec
+                                  ,   'ruimteniveau_opmerkingen_distribute' value true              --* Forgot what this does
+                                ------------------------------ * HTML Data *  -------------------------------------
+                                  ,   'htmlContent_use_tag_style'               value true
+                                  ,   'htmlbettercontent_ignore_cell_margin'    value true
                                 )
                             )
                 )
@@ -806,9 +673,9 @@ left join w_column_chart                    cch on adt.adt_id = cch.adt_id
 left join w_stock_chart                     sch on adt.adt_id = sch.adt_id
 left join w_timeline_chart                  tch on adt.adt_id = tch.main_adt_id
 left join w_donut_chart                     dch on adt.adt_id = dch.adt_id
--- left join w_audit_results_tbl               ars_tbl on ars_tbl.adt_id = adt.adt_id
--- left join w_room_level_comments_tbl         rlc_tbl on rlc_tbl.adt_id = adt.adt_id
--- left join w_general_comments_tbl            gnc_tbl on gnc_tbl.adt_id = adt.adt_id
--- left join w_other_and_hygienic_comments_tbl ohc_tbl on ohc_tbl.adt_id = adt.adt_id
+left join w_audit_results_tbl               ars_tbl on ars_tbl.adt_id = adt.adt_id
+left join w_room_level_comments_tbl         rlc_tbl on rlc_tbl.adt_id = adt.adt_id
+left join w_general_comments_tbl            gnc_tbl on gnc_tbl.adt_id = adt.adt_id
+left join w_other_and_hygienic_comments_tbl ohc_tbl on ohc_tbl.adt_id = adt.adt_id
 ;
 
