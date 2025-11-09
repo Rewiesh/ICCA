@@ -8,6 +8,9 @@
         },
         {
             "path": "../../../ICCA Datamigratie PRD"
+        },
+        {
+            "path": "../../../ICCADashboardApi"
         }
     ]
 }
