@@ -2,7 +2,10 @@ create or replace package icca_aop_pdf
 is
 --global variables
 
-    function f_get_imgs_html(p_doc_ids varchar2, p_duplicate_number number default null)
+    -- function f_get_imgs_html(p_doc_ids varchar2, p_duplicate_number number default null)
+    -- return clob;
+
+    function f_main_get_images(p_doc_log_book_ids varchar2, p_doc_tech_aspects_ids varchar2,  p_duplicate_number number default null, p_duplicate_tech number default null)
     return clob;
 
     /*

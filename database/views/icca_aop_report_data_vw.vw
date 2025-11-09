@@ -176,7 +176,8 @@ w_adt_related_scores_final as (
     from    w_adt_related_scores_limited ars
     where   rn_global <= 6
 )
--- select * from w_adt_related_scores_final where main_adt_id = 10936; --2809
+/*
+-- * old method of aggregating images, commented out for now
 , w_fom_all as (
     select
           adt_id
@@ -235,9 +236,64 @@ w_adt_related_scores_final as (
         --* Doc Tech Aspects
         left join icca_documents doc_tech_aspects on frs.technical_aspects_image_id = doc_tech_aspects.id
     ) docs
+    select
+          adt_id
+        , area_number
+        , error_count
+        , cat_name
+        , epe_name
+        , ete_name
+        , log_book_remark
+        , frs_id
+        , doc_id
+        , doc_type
+        , case when doc_id is not null then
+          dense_rank() over (
+             partition by adt_id
+             order by
+             case when doc_id is not null then 0 else 1 end, frs_id
+            --  case when doc_id is not null then frs_id end
+          )
+         end
+         as grp_rank
+    from (
+        -- (log book rows)
+        select  fom.adt_id          as adt_id
+        ,       fom.area_number     as area_number
+        ,       fom.error_count     as error_count
+        ,       cat_name            as cat_name
+        ,       epe.name            as epe_name
+        ,       ete.name            as ete_name
+        ,       frs.log_book_remark as log_book_remark
+        ,       frs.id              as frs_id
+        ,       doc_log_book.id     as doc_id
+        ,       'LOG'               as doc_type
+        from    w_fom fom
+        join    icca_fom_errors     frs on frs.fom_id = fom.id
+        join    icca_elementtypes   epe on frs.epe_id = epe.id
+        join    icca_error_types    ete on frs.ete_id = ete.id
+        --* Doc Log Book
+        left join icca_documents doc_log_book  on frs.log_book_image_id = doc_log_book.id
+        union all
+        -- (technical aspects rows)
+        select  fom.adt_id          as adt_id
+        ,       fom.area_number     as area_number
+        ,       fom.error_count     as error_count
+        ,       cat_name            as cat_name
+        ,       epe.name            as epe_name
+        ,       ete.name            as ete_name
+        ,       frs.log_book_remark as log_book_remark
+        ,       frs.id              as frs_id
+        ,       doc_tech_aspects.id as doc_id
+        ,       'TECH'              as doc_type
+        from    w_fom fom
+        join    icca_fom_errors     frs on frs.fom_id = fom.id
+        join    icca_elementtypes   epe on frs.epe_id = epe.id
+        join    icca_error_types    ete on frs.ete_id = ete.id
+        --* Doc Tech Aspects
+        left join icca_documents doc_tech_aspects on frs.technical_aspects_image_id = doc_tech_aspects.id
+    ) docs
 )
--- select * from w_fom_all
--- where adt_id = 7722;
 , w_fom_doc_cnt as(
     select  count(grp_rank) max_cnt
     ,       adt_id
@@ -269,8 +325,9 @@ w_fom_doc_grouped as (
                         case when doc_type = 'LOG' then 0 else 1 end
            ) as new_picture_number
     from w_fom_all fom
-)
+) */
 , w_fom_detail as (
+    /* part of old method of aggregating both image types
     select adt_id
     ,      area_number
     ,      error_count
@@ -286,7 +343,26 @@ w_fom_doc_grouped as (
     from w_fom_doc_ordered
     group by adt_id, area_number, error_count, cat_name, epe_name, ete_name, log_book_remark
     order by min(new_picture_number)
-) --select * from w_fom_detail where adt_id = 2;
+    */
+    select      fom.adt_id          adt_id
+        ,       fom.area_number     area_number
+        ,       fom.error_count     error_count
+        ,       cat_name            cat_name
+        ,       epe.name            epe_name
+        ,       ete.name            ete_name
+        ,       frs.log_book_remark log_book_remark
+        ,       doc_log_book.id     doc_log_book_id
+        ,       doc_tech_aspects.id doc_tech_aspects_id
+        ,       case when doc_log_book.id is not null then row_number() over (partition by fom.adt_id order by doc_log_book.id asc) end as picture_number
+    from    w_fom fom
+    join    icca_fom_errors     frs on frs.fom_id = fom.id
+    join    icca_elementtypes   epe on frs.epe_id = epe.id
+    join    icca_error_types    ete on frs.ete_id = ete.id
+    left join icca_documents doc_tech_aspects on frs.technical_aspects_image_id = doc_tech_aspects.id
+    left join icca_documents doc_log_book  on frs.log_book_image_id = doc_log_book.id
+)
+-- select  * from w_fom_detail where adt_id = 14460;
+--select * from w_fom_detail where adt_id = 2;
 , w_kpi as (
     select      adt.id              adt_id
     ,           ket.name            ket_name
@@ -549,7 +625,8 @@ as
 as
 (
     select  adt_id      adt_id
-    ,       listagg(doc_ids, ',') within group(order by pic_rnk) as doc_ids
+    ,       listagg(doc_log_book_id, ',') within group(order by picture_number) as doc_log_book_ids
+    ,       listagg(doc_tech_aspects_id, ',') within group(order by picture_number) as doc_tech_aspects_ids
     ,       json_arrayagg(
                     json_object(
                             'ruimte_nr'     value area_number
@@ -560,12 +637,13 @@ as
                         ,   'aantal_fouten' value error_count
                         ,   'foto_nr'       value picture_number
                         returning clob )
-                order by pic_rnk asc
+                order by picture_number asc
                 returning clob
             ) as tbl_spec
     from        w_fom_detail
     group by adt_id
-) --select * from w_room_level_comments_tbl where adt_id = 2;
+)
+-- select * from w_room_level_comments_tbl where adt_id = 14460;
 , w_general_comments_tbl
 as
 (
@@ -667,7 +745,8 @@ select  json_array(
 ,       adt.adt_id adt_id
 ,       adt.report_name
 ,       adt.audit_report_type
-,       rlc_tbl.doc_ids
+,       rlc_tbl.doc_tech_aspects_ids
+,       rlc_tbl.doc_log_book_ids
 from w_adt                                  adt
 left join w_column_chart                    cch on adt.adt_id = cch.adt_id
 left join w_stock_chart                     sch on adt.adt_id = sch.adt_id

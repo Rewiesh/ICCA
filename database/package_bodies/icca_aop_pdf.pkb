@@ -1,35 +1,63 @@
 create or replace package body icca_aop_pdf
 is
+
+    procedure print_clob (p_clob in clob)
+    is
+        l_offset     int := 1;
+    begin
+        loop
+        exit when l_offset > dbms_lob.getlength(p_clob);
+            dbms_output.put_line( dbms_lob.substr( p_clob, 255, l_offset ) );
+        l_offset := l_offset + 255;
+        end loop;
+    end print_clob;
 --global variables
 
-    function f_get_imgs_html(p_doc_ids varchar2, p_duplicate_number number default null)
+    function f_get_imgs_html(p_doc_ids varchar2, p_duplicate_number number default null, p_duplicate_tech number default null,  p_img_type in varchar2)
     return clob
     is
-        cursor c_get_docs(b_doc_ids varchar2, b_row_size number)
+        cursor c_get_docs(b_doc_ids varchar2, b_row_size number, b_img_type in varchar2)
         is
             with w_docs_list as (
                 select  column_value as id
                 ,       rownum       as rn
                 from    table(
                             apex_string.split(b_doc_ids, ',')
+                            -- apex_string.split(5401, ',')
                 )
+                -- join    (
+                --         select 1
+                --         from dual
+                --         connect by level <= case
+                --                                 when b_img_type = 'TECHNICAL_ASPECTS'
+                --                                     then nvl(p_duplicate_tech, 1)
+                --                                 else
+                --                                     nvl(p_duplicate_number, 1)
+                --                             end
+                -- ) on (1=1)
             ),
             w_img_data as(
-                select 'https://icca-dashboard.maxapex.net/' || doc.file_url as img_data
-                ,       doc.id                                           as id
-                ,       docs_list.rn                                     as rn
-                ,       mime_type                                        as mime_type
-                from    icca_documents doc
-                join    w_docs_list docs_list on docs_list.id = doc.id
-                join    (
-                    select 1 from dual connect by level <= nvl(p_duplicate_number, 1)
-                ) on (1=1)
-            order by docs_list.rn asc
+                select      'https://icca-dashboard.maxapex.net/' || doc.file_url as img_data
+                ,           doc.id                                           as id
+                ,           docs_list.rn                                     as rn
+                -- ,           substr(technical_aspects_remark, 1, 150)         as technical_aspects_remark
+                ,           case
+                                when length(technical_aspects_remark) > 150
+                                then substr(technical_aspects_remark, 1, 147) || '...'
+                                else technical_aspects_remark
+                            end as technical_aspects_remark
+                -- ,           technical_aspects_remark                         as technical_aspects_remark
+                ,           mime_type                                        as mime_type
+                from        icca_documents doc
+                join        w_docs_list docs_list on docs_list.id = doc.id
+                left join   icca_fom_errors frs on (doc.id = frs.technical_aspects_image_id and b_img_type = 'TECHNICAL_ASPECTS')
+                order by docs_list.rn asc
             )
            ,    w_img_rows as (
                     select  ceil(rn / b_row_size )                as row_num
                     ,       max(ceil(rn / b_row_size )) over()    as max_row_num
                     ,       rn
+                    ,       decode(b_img_type, 'TECHNICAL_ASPECTS', technical_aspects_remark, 'Foto ' || rn) as img_description
                     ,       id                                     as id
                     ,       mime_type
                     ,       img_data
@@ -63,7 +91,7 @@ is
             "row_spacing": {
                 "even": {
                     "first_page": { "last": 0, "not_last": 0 },
-                    "other_pages": { "last": 55, "not_last": 35 }
+                    "other_pages": { "last": 25, "not_last": 35 }
                 },
                 "odd": { "last": 0, "not_last": 0 }
             },
@@ -103,21 +131,11 @@ is
     ln_img_width            varchar2(100) := lv_const_spacing_params.get_object(lower(lv_const_orientation_mode)).get_Array('image_dimensions').get_string(0);
     ln_img_height           varchar2(100) := lv_const_spacing_params.get_object(lower(lv_const_orientation_mode)).get_Array('image_dimensions').get_string(1);
 
-    procedure print_clob (p_clob in clob)
-    is
-        l_offset     int := 1;
-    begin
-        loop
-        exit when l_offset > dbms_lob.getlength(p_clob);
-            dbms_output.put_line( dbms_lob.substr( p_clob, 255, l_offset ) );
-        l_offset := l_offset + 255;
-        end loop;
-    end print_clob;
-
+    lv_image_header_html varchar2(1000);
 
     begin
 
-        open    c_get_docs( b_doc_ids => p_doc_ids , b_row_size => ln_const_col_cnt );
+        open    c_get_docs( b_doc_ids => p_doc_ids , b_row_size => ln_const_col_cnt,  b_img_type => p_img_type);
         fetch   c_get_docs bulk collect into lt_docs;
         close   c_get_docs;
 
@@ -133,16 +151,21 @@ is
 
             -- Header Text(and styling)
             for j in i..least(i + ln_const_col_cnt  - 1, lt_docs.count) loop
-            -- for j in i..(i + ln_const_col_cnt  - 1) loop
+
+                lv_image_header_html := case p_img_type when 'TECHNICAL_ASPECTS' then
+                                                    '<th style="padding: 3px 5px; font-size:9px; line-height:1.0; text-align: left; border-top:1px solid #696969; border-left:1px solid #696969; border-right:1px solid #696969; border-bottom:none;">'
+                                            else    '<th style="padding: 5px; text-align: center; border-top:1px solid #696969; border-left:1px solid #696969; border-right:1px solid #696969; border-bottom:none;">'
+                                        end;
+
                dbms_lob.append(lc_html,
-                            '<th style="padding: 5px; border-top:1px solid #696969; border-left:1px solid #696969; border-right:1px solid #696969; border-bottom:none;">'
-                        ||      '<b>Foto ' || lt_docs(j).rn ||'</b>'
+                            lv_image_header_html
+                        ||      '<b>' || lt_docs(j).img_description ||'</b>'
                         ||  '</th>'
                )
-                        ;
+                ;
+
                 -- Append empty table headers for spacing between header columns, note that this is NOT done before 1st header and after 3rd header
                 if j < least(i + ln_const_col_cnt - 1, lt_docs.count) then
-                -- if j < (i + ln_const_col_cnt - 1) then
                     dbms_lob.append(lc_html, '<th style="width:40px; border:none;"></th>');
                 end if;
 
@@ -164,11 +187,11 @@ is
                     '<td style="width:'|| case when ( lt_docs.count <= 2 ) then ln_under_three_cell_width else ln_cell_width end ||'; height:' || case when ( lt_docs.count <= 2 ) then ln_under_three_cell_height else ln_cell_height end ||';border:1px solid #dfd81d; vertical-align:middle;">'
                     ----------------------------------------------------** Actual Image **-------------------
                     -- || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || lt_docs(k).img_data || '" ' --* actual image
-                    || '<img src="'|| lt_docs(k).img_data ||'" ' --* URL src tst
+                    || '<img src="'|| lt_docs(k).img_data ||'" ' --* URL src real
+                    -- || '<img src="'|| 'https://icca-dashboard.maxapex.net/uploads/cad2f5401cd34d1da8f1f10847f939b7.png' ||'" ' --* URL src tst should be commented out TODO: Remove these lines
                     -- || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || 'lv_img_based64' || '" ' --* for logging html
                     -- || '<img src="data:image/'|| lt_docs(k).mime_type || ';base64,' || lv_img_based64 || '" '   --* for testing img
                     || 'style="max-width: ' || ln_cell_width || '; max-height: ' || ln_cell_height || '; width:' || ln_img_width || '; height:' || ln_img_height ||'; object-fit:contain; display:block; border: 1px solid #dfd81d;">'
-                    -- || ' style="width: auto; height: auto; object-fit:contain; display:block; border: 1px solid #dfd81d;">'
                     || '</td>'
                 );
 
@@ -191,7 +214,10 @@ is
                 ln_row_space_height := case
                                             when lt_docs(i).row_num > 2 then
                                                 case
-                                                    when lt_docs(i).row_num = lt_docs(i).max_row_num then ln_even_other_page_last   --* space when moving from page 2+ to next page and LAST PAGE
+                                                    when lt_docs(i).row_num = lt_docs(i).max_row_num then --ln_even_other_page_last   --* space when moving from page 2+ to next page and LAST PAGE
+                                                        case when p_img_type = 'TECHNICAL_ASPECTS' then 15
+                                                        else ln_even_other_page_last end
+                                                        -- else 0 end
                                                     else ln_even_other_page_not_last end                                                --* space when moving from page 2+ to next page and NOT LAST PAGE
                                             else
                                                 case
@@ -204,16 +230,23 @@ is
             end if;
 
             -- Divider between rows
-            dbms_lob.append(lc_html, '<tr style="height:' || ln_row_space_height ||'px; border:none";><td colspan="'|| to_char((ln_const_col_cnt*2-1)) ||'" style="height:10px; border:none;"></td></tr>');
+            if ln_row_space_height = 0 then
+               null;
+            else
+                -- null;
+                dbms_lob.append(lc_html, '<tr style="height:' || ln_row_space_height ||'px; border:none";><td colspan="'|| to_char((ln_const_col_cnt*2-1)) ||'" style="height:10px; border:none;"></td></tr>');
+            end if;
             --
 
             -- * append extra table row for spacing so "Algemene Opmerkingen"elements aren't too close to header image
             if  mod(lt_docs(i).row_num, 2) = 0 and not lt_docs(i).row_num = lt_docs(i).max_row_num
             then
-                dbms_lob.append(lc_html, '<tr style="height:' || ln_extra_not_last ||'px; border:none";><td colspan="'|| to_char((ln_const_col_cnt*2-1)) ||'" style="height:10px; border:none;"></td></tr>');
+                null;
+                -- dbms_lob.append(lc_html, '<tr style="height:' || ln_extra_not_last ||'px; border:none";><td colspan="'|| to_char((ln_const_col_cnt*2-1)) ||'" style="height:10px; border:none;"></td></tr>');
             elsif mod(lt_docs(i).row_num, 2) = 0 and lt_docs(i).row_num = lt_docs(i).max_row_num
             then
-                dbms_lob.append(lc_html, '<tr style="height:' || ln_extra_last ||'px; border:none";><td colspan="'|| to_char((ln_const_col_cnt*2-1)) ||'" style="height:10px; border:none;"></td></tr>');
+                null;
+                -- dbms_lob.append(lc_html, '<tr style="height:' || ln_extra_last ||'px; border:none";><td colspan="'|| to_char((ln_const_col_cnt*2-1)) ||'" style="height:10px; border:none;"></td></tr>');
             end if;
 
 
@@ -232,6 +265,64 @@ is
             if c_get_docs%isopen then close c_get_docs; end if;
             raise;
     end f_get_imgs_html;
+
+    function f_main_get_images(p_doc_log_book_ids varchar2, p_doc_tech_aspects_ids varchar2,  p_duplicate_number number default null, p_duplicate_tech number default null)
+    return clob
+    is
+        l_rtn_val                       clob;
+        l_technical_aspects_header_html varchar2(1000);-- := '-- <p style="page-break-before: always;';
+        l_log_book_img_count            number;
+        l_page_break                    boolean;
+        l_log_book_header_html          varchar2(1000) := '<div style="font-size: 18px; font-weight: bold; font-family: Arial, sans-serif;">' ||
+                                                            '<p>Opmerking Element:</p>' ||
+                                                          '</div>';
+    begin
+
+        -- Create temporary CLOB
+        dbms_lob.createtemporary(l_rtn_val, true);
+
+        -- Calculate page break based on log book images
+        if p_doc_log_book_ids is not null then
+            l_log_book_img_count := nvl(regexp_count(p_doc_log_book_ids, '[^,]+'), 0);
+
+            l_log_book_img_count := l_log_book_img_count * nvl(p_duplicate_number, 1);
+
+            l_page_break := mod(l_log_book_img_count, 6) != 0;
+
+            -- Append logbook header and images
+            dbms_lob.append(l_rtn_val , l_log_book_header_html);
+            dbms_lob.append(l_rtn_val, f_get_imgs_html(p_doc_ids => p_doc_log_book_ids, p_img_type => 'LOG_BOOK', p_duplicate_number => p_duplicate_number, p_duplicate_tech => p_duplicate_tech));
+        end if;
+
+
+        -- * TODO
+        -- l_page_break := false;
+
+        -- Append tech aspect header and images
+        if p_doc_tech_aspects_ids is not null then
+            -- if p_doc_log_book_ids is not null then
+
+            -- Add header with optional page break if logbook images exist
+                l_technical_aspects_header_html := '<div style="' ||
+                        case
+                            when l_page_break then 'page-break-before: always; '
+                            else ''
+                        end ||
+                        'font-size: 18px; font-weight: bold; font-family: Arial, sans-serif; ">' ||
+                        '<p>Technische Aspecten:</p>' ||
+                        '</div>';
+                dbms_lob.append(l_rtn_val, l_technical_aspects_header_html);
+            -- end if;
+
+            -- Append tech aspect images
+            dbms_lob.append(l_rtn_val, f_get_imgs_html(p_doc_ids => p_doc_tech_aspects_ids, p_img_type => 'TECHNICAL_ASPECTS', p_duplicate_number => p_duplicate_number , p_duplicate_tech => p_duplicate_tech));
+        end if;
+
+        -- print_clob(l_rtn_val);
+
+        return l_rtn_val;
+
+    end f_main_get_images;
 
     procedure show_inline_pdf (   p_output_blob      in blob
                               ,   p_output_filename  in varchar2
