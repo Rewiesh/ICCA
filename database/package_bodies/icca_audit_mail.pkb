@@ -74,6 +74,7 @@ as
             return sys.odcivarchar2list();
     end f_parse_email_addresses;
     --
+    -----------------------------------------------------------------------------------------
     -- Genereer audit PDF
     function f_generate_audit_pdf( p_adt_id in number )
     return blob
@@ -87,6 +88,7 @@ as
     begin
         -- Bepaal output filename -- dummy
         l_output_filename := 'ICCA_Audit_' || p_adt_id || '.pdf';
+        dbms_output.put_line('Output filename: ' || l_output_filename);
         
         -- Haal report type op via audit -> client
         begin
@@ -103,6 +105,7 @@ as
                     p_extra => 'ADT_ID=' || p_adt_id
                 );
                 raise_application_error(-20001, 'Audit met ID ' || p_adt_id || ' niet gevonden');
+                dbms_output.put_line('Audit met ID ' || p_adt_id || ' niet gevonden');
         end;
         
         -- Bepaal template op basis van report type
@@ -113,6 +116,7 @@ as
             when 'BURO_HENNIE_DEKKER'   then 'FASE_CONTROL_TEMPLATE.docx'
             else 'ICCA_TEMPLATE.docx'  -- Default fallback
         end;
+        dbms_output.put_line('Template name: ' || l_template_name);
         
         -- Log welke template gebruikt wordt
         logger.log_info(
@@ -125,25 +129,30 @@ as
         
         -- Definieer SQL query EXACT zoals in APEX versie (met foto transformatie)
         l_query := q'[
-            with w_data as (
+                with w_data as (
                 select  aop_data
-                ,       doc_ids
+                ,       doc_log_book_ids
+                ,       doc_tech_aspects_ids
                 ,       audit_report_type
                 from    icca_aop_report_data_vw
-                where   adt_id = :P_ADT_ID
+                where   adt_id =  :P_ADT_ID
             )
-            select case when doc_ids is not null then json_transform (
-                        aop_data
-                    ,   set '$.data[0].htmlContent' = icca_aop_pdf.f_get_imgs_html(doc_ids)
-                        returning clob
-                ) else aop_data end as aop_data
+            select case when doc_log_book_ids is not null or doc_tech_aspects_ids is not null then json_transform (
+                            aop_data
+            ,   set '$.data[0].htmlContent' =  icca_aop_pdf.f_main_get_images(p_doc_log_book_ids => doc_log_book_ids, p_doc_tech_aspects_ids => doc_tech_aspects_ids)
+                            returning clob
+                    ) else aop_data end as aop_data
             from    w_data
-        ]';
+    ]'
+        ;
         
         -- Setup binds
         l_binds(1).name  := 'P_ADT_ID';
         l_binds(1).value := p_adt_id;
-        
+
+        dbms_output.put_line('Binds: ' || l_binds(1).name || ' = ' || l_binds(1).value);
+        dbms_output.put_line('Query: ' || l_query);
+        dbms_output.put_line('roep api op');
         -- Roep AOP aan EXACT zoals in APEX versie
         l_pdf_blob := aop_api_pkg.plsql_call_to_aop(
             p_data_type       => aop_api_pkg.c_source_type_sql,      -- SQL ipv JSON!
@@ -166,8 +175,10 @@ as
                 p_scope => 'icca_audit_mail.f_generate_audit_pdf',
                 p_extra => 'ADT_ID=' || p_adt_id
             );
+            dbms_output.put_line('Geen PDF gegenereerd');
             return null;
         end if;
+        dbms_output.put_line('PDF gegenereerd');
         
         -- Log success
         logger.log_info(
@@ -224,13 +235,16 @@ as
         l_pdf_filename      varchar2(255);
         l_contact_person    varchar2(255);
         l_mail_log_id       number;
+        l_doc_id            number;
     begin
         --
         apex_debug.message('Email addresses: ' || p_email_addresses);
+        dbms_output.put_line('Email addresses: ' || p_email_addresses);
         --
         -- Parse email adressen
         l_recipients := f_parse_email_addresses(p_email_addresses);
         apex_debug.message('Parsed email addresses: ' || l_recipients.count);
+        dbms_output.put_line('Parsed email addresses: ' || l_recipients.count);
         --
         -- Voeg toe na het parsen van emails (regel ~100):
         if l_recipients.count = 0 then
@@ -255,6 +269,7 @@ as
         if c_get_audit_data%notfound then
             close c_get_audit_data;
             raise_application_error(-20003, 'Audit niet gevonden: ' || p_adt_id);
+            dbms_output.put_line('Audit niet gevonden: ' || p_adt_id);
         end if;
         
         close c_get_audit_data;
@@ -265,15 +280,32 @@ as
             lr_audit_data.cnt_contact_person,
             'geachte relatie'
         );
+        dbms_output.put_line('Contact person: ' || l_contact_person);
         --
         -- Genereer PDF
         l_pdf_blob := f_generate_audit_pdf( p_adt_id => p_adt_id );
+        dbms_output.put_line('PDF blob generated');
+        --
         --
         -- Stel filename samen
         l_pdf_filename := lr_audit_data.code || '.' ||
                         lr_audit_data.company_name || '.' ||
                         lr_audit_data.location_name ||
                         '.pdf';
+
+        --
+        dbms_output.put_line('PDF filename: ' || l_pdf_filename);
+        l_doc_id := icca_file_upload.f_save_and_register_document(
+            p_blob          => l_pdf_blob
+        ,   p_filename      => l_pdf_filename
+        ,   p_mime_type     => 'application/pdf'
+        );
+        --
+        dbms_output.put_line('Document ID: ' || l_doc_id);
+        -- Update audit document
+        update  icca_audits
+        set     audit_doc_id = l_doc_id
+        where   id = p_adt_id;
         --
         -- Verstuur mail
         icca_mail.p_send_template_with_pdf(

@@ -817,7 +817,7 @@ is
         if l_is_public_user 
         then
             -- Sta alleen public pages toe
-            if l_app_page not in (100)
+            if l_app_page not in (100, 110)
             then
                 logger.log_warning(
                     p_text  => 'Sentry: Public user probeert protected page te bereiken',
