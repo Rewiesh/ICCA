@@ -20,7 +20,10 @@ as
     
     -- audit result type
     type t_audit_result is record
-        (   company_name        varchar2(200)
+        (   company_id          number
+        ,   audit_id            number
+        ,   fom_id              number
+        ,   company_name        varchar2(200)
         ,   name                varchar2(200)
         ,   region              varchar2(200)
         ,   date                varchar2(10)

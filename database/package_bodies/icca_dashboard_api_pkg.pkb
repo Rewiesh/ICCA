@@ -77,7 +77,10 @@ as
             b_fetch_rows    in number
         )
         is
-            select  companyname         as company_name
+            select  companyid           as company_id
+            ,       auditid             as audit_id
+            ,       fomid               as fom_id
+            ,       companyname         as company_name
             ,       name                as name
             ,       region              as region
             ,       to_char(audituitgevoerddatum, 'YYYY-MM-DD') as audit_date
@@ -120,6 +123,9 @@ as
         loop
             --
             ln_audit_result_idx := ln_audit_result_idx + 1;
+            lt_audit_results( ln_audit_result_idx ).company_id        := r_audit_result.company_id;
+            lt_audit_results( ln_audit_result_idx ).audit_id          := r_audit_result.audit_id;
+            lt_audit_results( ln_audit_result_idx ).fom_id            := r_audit_result.fom_id;
             lt_audit_results( ln_audit_result_idx ).company_name       := r_audit_result.company_name;
             lt_audit_results( ln_audit_result_idx ).name               := r_audit_result.name;
             lt_audit_results( ln_audit_result_idx ).region             := r_audit_result.region;
@@ -235,6 +241,9 @@ as
             declare
                 l_one_audit_result_json_obj json_object_t := json_object_t();
             begin
+                l_one_audit_result_json_obj.put( 'companyId'        , p_audit_results_tab(i).company_id );
+                l_one_audit_result_json_obj.put( 'auditId'          , p_audit_results_tab(i).audit_id );
+                l_one_audit_result_json_obj.put( 'fomId'            , p_audit_results_tab(i).fom_id );
                 l_one_audit_result_json_obj.put( 'companyName'      , icca_json_util.f_sanitize_json_string( p_audit_results_tab(i).company_name ) );
                 l_one_audit_result_json_obj.put( 'name'             , icca_json_util.f_sanitize_json_string( p_audit_results_tab(i).name ) );
                 l_one_audit_result_json_obj.put( 'region'           , icca_json_util.f_sanitize_json_string( p_audit_results_tab(i).region ) );

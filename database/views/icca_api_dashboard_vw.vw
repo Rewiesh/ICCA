@@ -49,7 +49,10 @@ as
         left join icca_elementtypes epe on fer.epe_id = epe.id
         left join icca_error_types  ete on fer.ete_id = ete.id
     )
-    select  cnt.company_name                                                    as CompanyName
+    select  cnt.id                                                              as CompanyId
+    ,       adt.id                                                              as AuditId
+    ,       fom.id                                                              as FomId
+    ,       cnt.company_name                                                    as CompanyName
     ,       cln.name                                                            as Name
     ,       cln.province                                                        as Region
     ,       adt.last_control_date                                               as AuditUitgevoerdDatum
@@ -77,7 +80,7 @@ as
     join    w_adt_form              fom on fom.adt_id = adt.id
     join    w_aantal_audit_cnt_cln  ooo on ooo.adt_code = adt.code
     left join w_adt_results         ars on ars.adt_id = adt.id and ars.cat_id = fom.cat_id
-    where   1=1--adt.activate = 'Y'
---    and     cnt.send_data_to_dashboard = 'Y'
+    where   adt.activate = 'Y'
+    and     cnt.send_data_to_dashboard = 'Y'
     order by areacode
 ;
