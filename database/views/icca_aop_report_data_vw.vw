@@ -12,7 +12,7 @@ with
     ,       fom.ara_id      ara_id
     ,       fom.pfr_id      pfr_id
     ,       fom.remark      rmk
-    ,       flr.name || ' - ' || trim(ara.abbreviation) || '.' ||  fom.area_number          area_number
+    ,       flr.name || '-' || trim(ara.abbreviation) || '.' ||  fom.area_number            area_number
     ,       cat.name                                                                        cat_name
     ,       fom.error_count                                                                 error_count
     from    icca_adt_forms fom
@@ -54,6 +54,7 @@ with
         ,   nvl2(doc.file_url, 'https://icca-dashboard.maxapex.net/' || doc.file_url, doc.file_url) as doc_file_url --* Maybe replace with apex_mail.get_instance_url?
         ,   adt.code || '.' || cnt.company_name || '.' || cln.name                                  as report_name
         ,   cnt.audit_report_type                                                                   as audit_report_type
+        ,   adt.type                                                                                as adt_type
     from    icca_audits adt
     join    icca_clients            cnt on adt.cnt_id = cnt.id
     join    icca_client_locations   cln on adt.cln_id = cln.id
@@ -355,9 +356,9 @@ w_fom_doc_grouped as (
         ,       doc_tech_aspects.id doc_tech_aspects_id
         ,       case when doc_log_book.id is not null then row_number() over (partition by fom.adt_id order by doc_log_book.id asc) end as picture_number
     from    w_fom fom
-    join    icca_fom_errors     frs on frs.fom_id = fom.id
-    join    icca_elementtypes   epe on frs.epe_id = epe.id
-    join    icca_error_types    ete on frs.ete_id = ete.id
+    left join    icca_fom_errors     frs on frs.fom_id = fom.id
+    left join    icca_elementtypes   epe on frs.epe_id = epe.id
+    left join    icca_error_types    ete on frs.ete_id = ete.id
     left join icca_documents doc_tech_aspects on frs.technical_aspects_image_id = doc_tech_aspects.id
     left join icca_documents doc_log_book  on frs.log_book_image_id = doc_log_book.id
 )
@@ -373,10 +374,10 @@ w_fom_doc_grouped as (
                     when 'N' then 'N.v.t.'
                 end                 ant_element_value
     ,           ant.element_comment ant_element_comment
-    from        icca_audits             adt
-    join        icca_ket_clients        kcn on adt.cnt_id = kcn.cnt_id
-    join        icca_kpi_elementen      ket on kcn.ket_id = ket.id
-    left join   icca_adt_kpi_elements   ant on (ant.kcn_id = kcn.id and ant.ket_id = kcn.ket_id and adt.id = ant.adt_id)
+    from    icca_audits             adt
+    join    icca_adt_kpi_elements   ant on ant.adt_id = adt.id
+    join    icca_kpi_elementen      ket on ant.ket_id = ket.id
+    where   ant.element_value is not null
 )
 ------------------------------ * Chart CTE's *  -------------------------------------
 , w_column_chart
@@ -692,6 +693,7 @@ select  json_array(
                                   ,   'tijdstip_controle'         value adt.tijdstip_controle
                                   ,   'controle_door'             value adt.controle_door
                                   ,   'aanwezig_leverancier'      value adt.aanwezig_leverancier
+                                  ,   'adt_type'                  value adt.adt_type
                                   ,   'client_logo'               value adt.doc_file_url
                                   ,   'client_logo_max_width'              value 225
                                   ,   'client_logo_max_height'             value 150

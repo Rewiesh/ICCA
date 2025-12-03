@@ -25,32 +25,45 @@ is
                             apex_string.split(b_doc_ids, ',')
                             -- apex_string.split(5401, ',')
                 )
-                -- join    (
-                --         select 1
-                --         from dual
-                --         connect by level <= case
-                --                                 when b_img_type = 'TECHNICAL_ASPECTS'
-                --                                     then nvl(p_duplicate_tech, 1)
-                --                                 else
-                --                                     nvl(p_duplicate_number, 1)
-                --                             end
-                -- ) on (1=1)
-            ),
+                join    (
+                        select 1
+                        from dual
+                        connect by level <= case
+                                                when b_img_type = 'TECHNICAL_ASPECTS'
+                                                    then nvl(p_duplicate_tech, 1)
+                                                else
+                                                    nvl(p_duplicate_number, 1)
+                                            end
+                ) on (1=1)
+            )
+            ,
+            w_fom as (
+                    select  case
+                                when fom.migrated_data = 'Y' then fom.migrated_area_code
+                                else flr.name||'-'||ara.abbreviation||'.'||fom.area_number
+                            end as area_code
+                    ,       fom.id fom_id
+                    from    icca_adt_forms      fom
+                    join    icca_floors         flr on fom.flr_id = flr.id
+                    join    icca_areas          ara on fom.ara_id = ara.id
+            )
+            ,
             w_img_data as(
                 select      'https://icca-dashboard.maxapex.net/' || doc.file_url as img_data
                 ,           doc.id                                           as id
                 ,           docs_list.rn                                     as rn
                 -- ,           substr(technical_aspects_remark, 1, 150)         as technical_aspects_remark
                 ,           case
-                                when length(technical_aspects_remark) > 150
-                                then substr(technical_aspects_remark, 1, 147) || '...'
-                                else technical_aspects_remark
+                                when length( fom.area_code || ': '|| technical_aspects_remark  ) > 150
+                                then substr( fom.area_code || ': '|| technical_aspects_remark  , 1, 147) || '...'
+                                else fom.area_code ||': ' ||technical_aspects_remark
                             end as technical_aspects_remark
                 -- ,           technical_aspects_remark                         as technical_aspects_remark
                 ,           mime_type                                        as mime_type
                 from        icca_documents doc
                 join        w_docs_list docs_list on docs_list.id = doc.id
                 left join   icca_fom_errors frs on (doc.id = frs.technical_aspects_image_id and b_img_type = 'TECHNICAL_ASPECTS')
+                left join   w_fom fom on frs.fom_id = fom.fom_id
                 order by docs_list.rn asc
             )
            ,    w_img_rows as (
@@ -231,9 +244,8 @@ is
 
             -- Divider between rows
             if ln_row_space_height = 0 then
-               null;
+                dbms_lob.append(lc_html, '<tr style="height:' || ln_row_space_height ||'px; border:none";><td colspan="'|| to_char((ln_const_col_cnt*2-1)) ||'" style="height:0px; border:none;"></td></tr>');
             else
-                -- null;
                 dbms_lob.append(lc_html, '<tr style="height:' || ln_row_space_height ||'px; border:none";><td colspan="'|| to_char((ln_const_col_cnt*2-1)) ||'" style="height:10px; border:none;"></td></tr>');
             end if;
             --
