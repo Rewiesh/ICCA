@@ -458,10 +458,11 @@ create or replace package body icca_pdf_fase_control_data as
    function f_get_element_fotos (
       p_adt_id in number
    ) return json_array_t is
-      l_arr      json_array_t := json_array_t();
-      l_obj      json_object_t;
-      l_count    number := 0;
-      l_file_url varchar2(4000);
+      l_arr          json_array_t := json_array_t();
+      l_obj          json_object_t;
+      l_count        number := 0;
+      l_file_url     varchar2(4000);
+      l_base64_data  clob;
    begin
       -- Zelfde volgorde als ruimte_opmerkingen zodat foto_nr matcht
       for r in (
@@ -487,11 +488,16 @@ create or replace package body icca_pdf_fase_control_data as
          end;
         
          if l_file_url is not null then
-            l_count := l_count + 1;
-            l_obj := json_object_t();
-            l_obj.put('foto_nummer', l_count);
-            l_obj.put('url', c_base_url || l_file_url);
-            l_arr.append(l_obj);
+            -- Get Base64 image data
+            l_base64_data := icca_file_upload.f_get_image_base64(l_file_url);
+            
+            if l_base64_data is not null then
+               l_count := l_count + 1;
+               l_obj := json_object_t();
+               l_obj.put('foto_nummer', l_count);
+               l_obj.put('base64_data', l_base64_data);
+               l_arr.append(l_obj);
+            end if;
          end if;
       end loop;
       return l_arr;
@@ -503,9 +509,10 @@ create or replace package body icca_pdf_fase_control_data as
    function f_get_technische_aspecten_fotos (
       p_adt_id in number
    ) return json_array_t is
-      l_arr      json_array_t := json_array_t();
-      l_obj      json_object_t;
-      l_file_url varchar2(4000);
+      l_arr          json_array_t := json_array_t();
+      l_obj          json_object_t;
+      l_file_url     varchar2(4000);
+      l_base64_data  clob;
    begin
       for r in (
          select distinct 
@@ -533,10 +540,15 @@ create or replace package body icca_pdf_fase_control_data as
          end;
         
          if l_file_url is not null then
-            l_obj := json_object_t();
-            l_obj.put('url', c_base_url || l_file_url);
-            l_obj.put('beschrijving', nvl(r.beschrijving, ''));
-            l_arr.append(l_obj);
+            -- Get Base64 image data
+            l_base64_data := icca_file_upload.f_get_image_base64(l_file_url);
+            
+            if l_base64_data is not null then
+               l_obj := json_object_t();
+               l_obj.put('base64_data', l_base64_data);
+               l_obj.put('beschrijving', nvl(r.beschrijving, ''));
+               l_arr.append(l_obj);
+            end if;
          end if;
       end loop;
       return l_arr;

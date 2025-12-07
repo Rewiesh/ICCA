@@ -41,7 +41,7 @@ begin
     icca_incoming_msg.p_store_incoming_message(
         p_pfr_id       => ln_pfr_id,
         p_api_method   => 'POST',
-        p_api_endpoint => 'api/postAudits/ ',
+        p_api_endpoint => 'api/postAudits/ ', 
         p_msg          => apex_util.blob_to_clob(v_audit_data, 'UTF-8'),
         po_ige_id      => ln_ige_id
     );

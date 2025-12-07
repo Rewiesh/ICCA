@@ -2,12 +2,15 @@ set serveroutput on size unlimited;
 
 declare
     l_log_id number;
+    l_to_list sys.odcivarchar2list;
 begin
     --
     dbms_output.put_line('=== Test 1: Eenvoudige mail ===');
     --
+    l_to_list := sys.odcivarchar2list('diewish0@gmail.com');
+    --
     icca_mail.p_send_email(
-        p_to        => 'diewish0@gmail.com',
+        p_to        => l_to_list,
         p_subject   => 'Test vanuit ICCA Mail Package',
         p_body      => 'Dit is een testmail vanuit de icca_mail package.' || chr(10) || chr(10) ||
                        'Verzonden op: ' || to_char(sysdate, 'DD-MM-YYYY HH24:MI:SS'),

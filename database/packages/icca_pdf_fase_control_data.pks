@@ -11,13 +11,13 @@ as
     --            JSON met template_name = 'FASE_CONTROL' ipv 'ICCA_RAPPORT'
     -- ========================================================================
     --
-    
+
     --
     -- Genereer de volledige JSON voor het FASE_CONTROL rapport
     --
-   function f_get_main_json (
-      p_adt_id in number
-   ) return clob;
+    function f_get_main_json (
+        p_adt_id in number
+    ) return clob;
 
 end icca_pdf_fase_control_data;
 /
