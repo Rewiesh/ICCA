@@ -52,7 +52,7 @@ is
         ,   forms               tt_forms
         );
 
-    procedure p_msg_handler( p_incomming_message_id in number );
+    procedure p_msg_handler( p_incomming_message_id in number, po_audit_id out number );
 
 end icca_audit_post_api;
 /

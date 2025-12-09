@@ -16,6 +16,7 @@ begin
     ln_ige_id     number;
     v_username    varchar2(100);
     ln_pfr_id     number;
+    ln_audit_id   number;
 begin
     -- get user
     v_username := :username;
@@ -47,7 +48,12 @@ begin
     );
 
     -- process ingekomen audit
-    icca_audit_post_api.p_msg_handler( ln_ige_id );
+    icca_audit_post_api.p_msg_handler( ln_ige_id, ln_audit_id );
+
+    -- return the ID as JSON
+    owa_util.status_line (200, '', false);
+    owa_util.mime_header ('application/json', true);
+    htp.prn('{"id": "' || ln_audit_id || '"}');
 
 end;
 ]'

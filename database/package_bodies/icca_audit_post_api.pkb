@@ -805,7 +805,7 @@ is
     --
     -----------------------------------------------------------------------------------------
     --  message handler voor ingekomen audit gegevens
-    procedure p_msg_handler( p_incomming_message_id in number )
+    procedure p_msg_handler( p_incomming_message_id in number, po_audit_id out number )
     is
         -- variables
         lr_ige              icca_incoming_messages%rowtype;
@@ -827,6 +827,8 @@ is
         --
         -- stuur de audit rapport naar de klant
         p_send_audit_mail( l_audit.id );
+        --
+        po_audit_id := l_audit.id;
         --
     end p_msg_handler;
     --
