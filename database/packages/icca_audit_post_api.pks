@@ -54,5 +54,8 @@ is
 
     procedure p_msg_handler( p_incomming_message_id in number, po_audit_id out number );
 
+    procedure p_process_audit(  p_pfr_id in number
+                            ,   p_audit  in t_audit );
+
 end icca_audit_post_api;
 /
