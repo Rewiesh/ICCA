@@ -5,7 +5,8 @@ DECLARE
     c_smtp_host     CONSTANT VARCHAR2(100) := 'smtp.transip.email';
     c_smtp_port     CONSTANT NUMBER := 465;  -- SSL poort
     c_username      CONSTANT VARCHAR2(100) := 'info@iccaadvies.eu';
-    c_password      CONSTANT VARCHAR2(100) := 'zyrpeb-nipraF-9fyppo';
+    -- c_password      CONSTANT VARCHAR2(100) := 'zyrpeb-nipraF-9fyppo';
+    c_password      CONSTANT VARCHAR2(100) := 'jQ5wp8JAOQGG';
     
     -- Mail gegevens
     c_from_addr     CONSTANT VARCHAR2(100) := 'info@iccaadvies.eu';
