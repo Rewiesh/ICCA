@@ -235,7 +235,8 @@ create or replace package body icca_pdf_icca_zonder_cijfers_data as
             join icca_error_types ete on ete.id = err.ete_id
             where fom.adt_id = p_adt_id
             and lower(ete.name) = lower(p_naam)
-            and (err.added_default_ete_id is null and err.added_default_epe_id is null);
+            -- and (err.added_default_ete_id is null and err.added_default_epe_id is null)
+            ;
             
             l_obj := json_object_t();
             -- Split de naam in 4 lijnen
@@ -302,7 +303,7 @@ create or replace package body icca_pdf_icca_zonder_cijfers_data as
         join icca_adt_forms fom on fom.id = err.fom_id
         join icca_error_types ete on ete.id = err.ete_id
         where fom.adt_id = p_adt_id
-            and (err.added_default_ete_id is null and err.added_default_epe_id is null)
+            -- and (err.added_default_ete_id is null and err.added_default_epe_id is null)
         group by ete.id;
         return l_max;
     exception
@@ -328,7 +329,8 @@ create or replace package body icca_pdf_icca_zonder_cijfers_data as
         from icca_fom_errors err
         join icca_adt_forms fom on fom.id = err.fom_id
         where fom.adt_id = p_adt_id
-            and (err.added_default_ete_id is null and err.added_default_epe_id is null);
+            -- and (err.added_default_ete_id is null and err.added_default_epe_id is null)
+            ;
 
         if l_total > 0 then
             -- Per error type naam
@@ -339,7 +341,7 @@ create or replace package body icca_pdf_icca_zonder_cijfers_data as
                 join icca_adt_forms fom on fom.id = err.fom_id
                 join icca_error_types ete on ete.id = err.ete_id
                 where fom.adt_id = p_adt_id
-                and (err.added_default_ete_id is null and err.added_default_epe_id is null)
+                -- and (err.added_default_ete_id is null and err.added_default_epe_id is null)
                 group by ete.name
             ) loop
             -- Dagelijks: Niet gehecht vuil
@@ -388,7 +390,7 @@ create or replace package body icca_pdf_icca_zonder_cijfers_data as
                 err.log_book_remark as opmerking,
                 err.error_count as aantal_fouten,
                 err.log_book_image_id as foto_id
-            from    icca_adt_forms    fom
+            from icca_adt_forms fom
             left join icca_fom_errors err on fom.id = err.fom_id
             left join icca_floors flr on fom.flr_id = flr.id
             left join icca_areas ara on fom.ara_id = ara.id
@@ -396,8 +398,8 @@ create or replace package body icca_pdf_icca_zonder_cijfers_data as
             left join icca_elementtypes epe on epe.id = err.epe_id
             left join icca_error_types ete on ete.id = err.ete_id
             where fom.adt_id = p_adt_id
-            and (err.added_default_ete_id is null and err.added_default_epe_id is null)
-            order by flr.name, ara.abbreviation, fom.area_number
+            -- and (err.added_default_ete_id is null and err.added_default_epe_id is null)
+            order by epe.name nulls last, flr.name, ara.abbreviation, fom.area_number
         ) loop
             -- Foto nummer alleen verhogen als er een foto is
             if r.foto_id is not null then
@@ -437,7 +439,7 @@ create or replace package body icca_pdf_icca_zonder_cijfers_data as
             join icca_areas ara on fom.ara_id = ara.id
             where fom.adt_id = p_adt_id
             and err.log_book_image_id is not null
-            and (err.added_default_ete_id is null and err.added_default_epe_id is null)
+            -- and (err.added_default_ete_id is null and err.added_default_epe_id is null)
             order by flr.name, ara.abbreviation, fom.area_number
         ) loop
             begin

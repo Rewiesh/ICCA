@@ -269,7 +269,8 @@ create or replace package body icca_pdf_icca_data as
             join icca_error_types ete on ete.id = err.ete_id
             where fom.adt_id = p_adt_id
             and lower(ete.name) = lower(p_naam)
-            and (err.added_default_ete_id is null and err.added_default_epe_id is null);
+            -- and (err.added_default_ete_id is null and err.added_default_epe_id is null)
+            ;
         
         l_obj := json_object_t();
         -- Split de naam in 4 lijnen
@@ -336,7 +337,7 @@ create or replace package body icca_pdf_icca_data as
         join icca_adt_forms fom on fom.id = err.fom_id
         join icca_error_types ete on ete.id = err.ete_id
         where fom.adt_id = p_adt_id
-        and (err.added_default_ete_id is null and err.added_default_epe_id is null)
+        -- and (err.added_default_ete_id is null and err.added_default_epe_id is null)
         group by ete.id;
     return l_max;
     exception
@@ -349,33 +350,34 @@ create or replace package body icca_pdf_icca_data as
     -- Berekent op basis van error type naam (zelfde logica als f_get_foutsoorten)
     --
     function f_get_verhouding (
-    p_adt_id in number
+        p_adt_id in number
     ) return json_object_t is
-    l_obj          json_object_t := json_object_t();
-    l_total        number := 0;
-    l_dagelijks    number := 0;
-    l_cumulatief   number := 0;
-    l_divers       number := 0;
+        l_obj          json_object_t := json_object_t();
+        l_total        number := 0;
+        l_dagelijks    number := 0;
+        l_cumulatief   number := 0;
+        l_divers       number := 0;
     begin
-    -- Totaal aantal fouten
-    select nvl(sum(err.error_count), 0)
-        into l_total
-        from icca_fom_errors err
-        join icca_adt_forms fom on fom.id = err.fom_id
-        where fom.adt_id = p_adt_id
-        and (err.added_default_ete_id is null and err.added_default_epe_id is null);
+        -- Totaal aantal fouten
+        select nvl(sum(err.error_count), 0)
+            into l_total
+            from icca_fom_errors err
+            join icca_adt_forms fom on fom.id = err.fom_id
+            where fom.adt_id = p_adt_id
+            -- and (err.added_default_ete_id is null and err.added_default_epe_id is null)
+            ;
 
-    if l_total > 0 then
-        -- Per error type naam (zelfde logica als f_get_foutsoorten)
-        for r in (
-            select ete.name as error_type_naam,
-                    sum(err.error_count) as aantal
-                from icca_fom_errors err
-                join icca_adt_forms fom on fom.id = err.fom_id
-                join icca_error_types ete on ete.id = err.ete_id
-                where fom.adt_id = p_adt_id
-                and (err.added_default_ete_id is null and err.added_default_epe_id is null)
-                group by ete.name
+        if l_total > 0 then
+            -- Per error type naam (zelfde logica als f_get_foutsoorten)
+            for r in (
+                select ete.name as error_type_naam,
+                        sum(err.error_count) as aantal
+                    from icca_fom_errors err
+                    join icca_adt_forms fom on fom.id = err.fom_id
+                    join icca_error_types ete on ete.id = err.ete_id
+                    where fom.adt_id = p_adt_id
+                    -- and (err.added_default_ete_id is null and err.added_default_epe_id is null)
+                    group by ete.name
         ) loop
             -- Dagelijks: Niet gehecht vuil
             if lower(r.error_type_naam) like 'niet gehecht vuil%' then
@@ -423,16 +425,16 @@ create or replace package body icca_pdf_icca_data as
                     err.log_book_remark as opmerking,
                     err.error_count as aantal_fouten,
                     err.log_book_image_id as foto_id
-                from icca_fom_errors err
-                join icca_adt_forms fom on fom.id = err.fom_id
-                join icca_floors flr on fom.flr_id = flr.id
-                join icca_areas ara on fom.ara_id = ara.id
-                join icca_categories cat on fom.cat_id = cat.id
-                join icca_elementtypes epe on epe.id = err.epe_id
-                join icca_error_types ete on ete.id = err.ete_id
+                from icca_adt_forms fom
+                left join icca_fom_errors err on fom.id = err.fom_id
+                left join icca_floors flr on fom.flr_id = flr.id
+                left join icca_areas ara on fom.ara_id = ara.id
+                left join icca_categories cat on fom.cat_id = cat.id
+                left join icca_elementtypes epe on epe.id = err.epe_id
+                left join icca_error_types ete on ete.id = err.ete_id
                 where fom.adt_id = p_adt_id
-                and (err.added_default_ete_id is null and err.added_default_epe_id is null)
-                order by flr.name, ara.abbreviation, fom.area_number
+                -- and (err.added_default_ete_id is null and err.added_default_epe_id is null)
+                order by epe.name nulls last, flr.name, ara.abbreviation, fom.area_number
         ) loop
             -- Foto nummer alleen verhogen als er een foto is
             if r.foto_id is not null then
@@ -473,7 +475,7 @@ create or replace package body icca_pdf_icca_data as
                 join icca_areas ara on fom.ara_id = ara.id
                 where fom.adt_id = p_adt_id
                 and err.log_book_image_id is not null
-                and (err.added_default_ete_id is null and err.added_default_epe_id is null)
+                -- and (err.added_default_ete_id is null and err.added_default_epe_id is null)
                 order by flr.name, ara.abbreviation, fom.area_number
         ) loop
             begin
