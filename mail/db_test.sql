@@ -4,12 +4,14 @@ DECLARE
     -- SMTP Configuratie
     c_smtp_host     CONSTANT VARCHAR2(100) := 'smtp.transip.email';
     c_smtp_port     CONSTANT NUMBER := 465;  -- SSL poort
-    c_username      CONSTANT VARCHAR2(100) := 'info@iccaadvies.eu';
+    -- c_username      CONSTANT VARCHAR2(100) := 'info@iccaadvies.eu';
+    c_username      CONSTANT VARCHAR2(100) := 'kwaliteit@iccaadvies.eu';
     -- c_password      CONSTANT VARCHAR2(100) := 'zyrpeb-nipraF-9fyppo';
-    c_password      CONSTANT VARCHAR2(100) := 'jQ5wp8JAOQGG';
+    c_password      CONSTANT VARCHAR2(100) := 'Carla412jaguar';
     
     -- Mail gegevens
-    c_from_addr     CONSTANT VARCHAR2(100) := 'info@iccaadvies.eu';
+    -- c_from_addr     CONSTANT VARCHAR2(100) := 'info@iccaadvies.eu';
+    c_from_addr     CONSTANT VARCHAR2(100) := 'kwaliteit@iccaadvies.eu';
     c_to_addr       CONSTANT VARCHAR2(100) := 'diewish0@gmail.com';
     c_subject       CONSTANT VARCHAR2(200) := 'SMTP Test vanuit Oracle';
     c_message       CONSTANT VARCHAR2(4000) := 'Dit is een testmail verzonden vanuit Oracle Database.';

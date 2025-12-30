@@ -36,7 +36,7 @@ when not matched then
 merge into icca_mail_config t
 using (
     select 'SMTP_USERNAME' as config_key,
-           'info@iccaadvies.eu' as config_value,
+           'kwaliteit@iccaadvies.eu' as config_value,
            'SMTP authentication username' as description,
            'N' as is_encrypted
     from dual
@@ -53,7 +53,7 @@ when not matched then
 merge into icca_mail_config t
 using (
     select 'SMTP_PASSWORD' as config_key,
-           'zyrpeb-nipraF-9fyppo' as config_value,
+           'Carla412jaguar' as config_value,
            'SMTP authentication password' as description,
            'N' as is_encrypted
     from dual
@@ -70,7 +70,7 @@ when not matched then
 merge into icca_mail_config t
 using (
     select 'SMTP_FROM_ADDRESS' as config_key,
-           'info@iccaadvies.eu' as config_value,
+           'kwaliteit@iccaadvies.eu' as config_value,
            'Default from address' as description,
            'N' as is_encrypted
     from dual
