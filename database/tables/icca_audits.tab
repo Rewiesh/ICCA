@@ -27,6 +27,10 @@ alter table icca_audits add constraint icca_adt_doc_fk3 foreign key(signature_im
 alter table icca_audits add constraint icca_adt_pfr_fk4 foreign key(pfr_id) references icca_performers(id);
 alter table icca_audits add constraint icca_adt_doc_fk5 foreign key(audit_doc_id) references icca_documents(id);
 
+CREATE INDEX icca_adt_completed_idx ON icca_audits(audit_completed);
+CREATE INDEX icca_adt_cnt_id_idx ON icca_audits(cnt_id);
+CREATE INDEX icca_adt_cln_id_idx ON icca_audits(cln_id);
+
 create sequence icca_adt_code_seq
     start with 2000
     increment by 1

@@ -369,3 +369,95 @@ begin
     dbms_output.put_line('========================================');
 end;
 /
+
+set serveroutput on;
+declare
+    ln_usr_id number;
+    ln_pfr_id number;
+    ln_pnt_id number;
+    ln_existing_usr_id number;
+    ln_existing_pfr_id number;
+    ln_existing_pnt_id number;
+    ln_eml_id number;
+    ln_existing_eml_id number;
+        ln_total_users number := 0;
+    ln_new_users number := 0;
+    ln_reused_users number := 0;
+    ln_new_performers number := 0;
+    ln_reused_performers number := 0;
+    ln_new_emails number := 0;
+    ln_reused_emails number := 0;
+    ln_new_relations number := 0;
+    ln_reused_relations number := 0;
+begin
+      for pfr in (
+          select  ca.auditor_id
+          ,       ca.client_id
+          ,       uc.cnt_id
+--          ,       d.usr_id
+--          ,       ca.*
+          ,       pfr.id pfr_id
+--          , d.*
+          from    client_auditor2 ca
+          join    users_client2 uc on uc.id = ca.client_id
+          join    users_auditor d on d.id = ca.auditor_id
+          join icca_performers pfr on pfr.usr_id = d.usr_id
+          where pnt_id is null
+      ) loop
+          begin
+              ln_pnt_id := null;
+              ln_pfr_id:= pfr.pfr_id;
+              ln_existing_pnt_id := null;
+              
+              -- Check of relatie al gemigreerd is via oude tabel
+              begin
+                  select pnt_id 
+                  into ln_existing_pnt_id
+                  from client_auditor2
+                  where auditor_id = pfr.auditor_id
+                  and client_id = pfr.client_id
+                  and pnt_id is not null;
+              exception
+                  when no_data_found then
+                      ln_existing_pnt_id := null;
+              end;
+              
+              -- Als nog niet gemigreerd, check in icca_pfr_clients
+              if ln_existing_pnt_id is null then
+                  begin
+                      select id
+                      into ln_existing_pnt_id
+                      from icca_pfr_clients
+                      where pfr_id = ln_pfr_id
+                      and cnt_id = pfr.cnt_id
+                      and rownum = 1;
+                  exception
+                      when no_data_found then
+                          ln_existing_pnt_id := null;
+                  end;
+              end if;
+              
+              -- Relatie aanmaken of hergebruiken
+              if ln_existing_pnt_id is not null then
+                  ln_pnt_id := ln_existing_pnt_id;
+                  ln_reused_relations := ln_reused_relations + 1;
+              else
+                  insert into icca_pfr_clients(pfr_id, cnt_id)
+                  values (ln_pfr_id, pfr.cnt_id)
+                  returning id into ln_pnt_id;
+                  
+                  ln_new_relations := ln_new_relations + 1;
+              end if;
+              
+              -- Update client_auditor tabel met pnt_id (idempotent)
+              update client_auditor2
+              set pnt_id = ln_pnt_id
+              where auditor_id = pfr.auditor_id
+              and client_id = pfr.client_id;
+              
+          exception
+              when others then
+                  dbms_output.put_line('  ⚠ Error migrating performer-client relation: ' || sqlerrm);
+          end;
+      end loop;
+end;            

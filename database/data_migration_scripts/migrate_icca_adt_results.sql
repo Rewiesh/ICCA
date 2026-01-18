@@ -10,12 +10,12 @@ declare
         ,       ars.approvelimit                                    as approve_limit
         ,       ars.rating                                          as score
         ,       case when ars.IsSuficient = 1 then 'Y' else 'N' end as is_sufficient
-        from    ResultAuditCategory ars
-        join    audits              adt on ars.idaudit = adt.id
+        from    ResultAuditCategory2 ars
+        join    audits2              adt on ars.idaudit = adt.id
         join    categories          cat on ars.idcategory = cat.id
         where   adt.adt_id is not null
         and     cat.cat_id is not null
-        -- and ars.ars_id is null
+        and ars.ars_id is null
         ;
     
     type t_old_data is table of c_get_old_data%rowtype;
@@ -79,7 +79,7 @@ begin
             begin
                 select ars_id 
                 into ln_existing_ars_id
-                from ResultAuditCategory
+                from ResultAuditCategory2
                 where idaudit = lt_old_data(i).old_adt_id
                 and idcategory = lt_old_data(i).old_cat_id
                 and ars_id is not null;
@@ -137,7 +137,7 @@ begin
             end if;
             
             -- Update oude ResultAuditCategory tabel (idempotent)
-            update  ResultAuditCategory
+            update  ResultAuditCategory2
             set     ars_id = ln_ars_id
             where   idaudit = lt_old_data(i).old_adt_id
             and     idcategory = lt_old_data(i).old_cat_id;
@@ -206,7 +206,7 @@ begin
         
         -- Check for records NOT migrated
         select count(*) into ln_not_migrated 
-        from ResultAuditCategory 
+        from ResultAuditCategory2 
         where ars_id is null;
         
         if ln_not_migrated > 0 then

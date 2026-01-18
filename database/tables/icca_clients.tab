@@ -30,6 +30,8 @@ alter table icca_clients add constraint icca_cnt_bch_fk2 foreign key(bch_id) ref
 -- indexes
 create unique index icca_cnt_usr_id_uk_idx1 on icca_clients (usr_id);
 create unique index icca_cnt_company_name_uk_idx2 on icca_clients (upper(company_name));
+CREATE INDEX icca_cnt_bch_id_idx ON icca_clients(bch_id);
+
 --
 -- alter table icca_clients add audit_report_type varchar2(100) default 'ICCA' not null;
 -- alter table icca_clients add send_data_to_dashboard varchar2(1) default 'N' not null;

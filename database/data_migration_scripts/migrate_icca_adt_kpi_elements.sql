@@ -6,20 +6,20 @@ declare
         ,       ant.idelement                                   as old_elm_id
         ,       adt.adt_id                                      as new_adt_id
         ,       elm.ket_id                                      as new_ket_id
-        ,       kcn.kcn_id                                      as new_kcn_id
+        ,       null                                            as new_kcn_id
         ,       elm.elementlabel                                as element_label
         ,       trim(sts.ElementStatusValueCode)                as element_value
         ,       ant.elementauditcomment                         as element_comment
-        from    elementaudit        ant
-        join    audits              adt on adt.id = ant.idaudit
-        join    element             elm on elm.id = ant.idelement
-        left join elementclient     kcn on kcn.idelement = ant.idelement and kcn.kcn_id is not null
+        from    elementaudit2        ant
+        join    audits2              adt on adt.id = ant.idaudit
+        join    element              elm on elm.id = ant.idelement
+--        left join elementclient     kcn on kcn.idelement = ant.idelement and kcn.kcn_id is not null
         join    ElementStatusValue  sts on sts.id = ant.elementauditstatus
         where   adt.adt_id is not null
         and     elm.ket_id is not null
-        -- and ant.ant_id is null
+         and ant.ant_id is null
         -- and adt.auditcode = '10215'
-        ;
+        ; 
     
     type t_old_data is table of c_get_old_data%rowtype;
     lt_old_data t_old_data;
@@ -62,7 +62,7 @@ begin
             begin
                 select ant_id 
                 into ln_existing_ant_id
-                from elementaudit
+                from elementaudit2
                 where idelement = lt_old_data(i).old_elm_id
                 and idaudit = lt_old_data(i).old_adt_id
                 and ant_id is not null;
@@ -79,7 +79,7 @@ begin
                     from    icca_adt_kpi_elements
                     where   adt_id = lt_old_data(i).new_adt_id
                     and     ket_id = lt_old_data(i).new_ket_id
-                    and     nvl(kcn_id, -1) = nvl(lt_old_data(i).new_kcn_id, -1)
+--                    and     nvl(kcn_id, -1) = nvl(lt_old_data(i).new_kcn_id, -1)
                     and     rownum = 1;
                 exception
                     when no_data_found then
@@ -121,7 +121,7 @@ begin
             end if;
             
             -- Update oude elementaudit tabel (idempotent)
-            update  elementaudit
+            update  elementaudit2
             set     ant_id = ln_ant_id
             where   idelement = lt_old_data(i).old_elm_id
             and     idaudit = lt_old_data(i).old_adt_id;
@@ -191,7 +191,7 @@ begin
         
         -- Check for records NOT migrated
         select count(*) into ln_not_migrated 
-        from elementaudit 
+        from elementaudit2
         where ant_id is null;
         
         if ln_not_migrated > 0 then

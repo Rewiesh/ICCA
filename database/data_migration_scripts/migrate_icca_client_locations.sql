@@ -13,8 +13,8 @@ declare
         ,       case when bld.activate = 1 then 'Y' else 'N' end    as active
         ,       bld.email                                           as email
         ,       'Y'                                                 as migrated_data
-        from    Users_Client cnt
-        join    buildings bld on bld.client_id = cnt.id
+        from    Users_Client2 cnt
+        join    buildings2 bld on bld.client_id = cnt.id
         where   cnt.cnt_id is not null
         -- and bld.cln_id is null
         ;
@@ -46,7 +46,7 @@ begin
             begin
                 select cln_id 
                 into ln_existing_cln_id
-                from buildings
+                from buildings2
                 where id = lt_old_data(i).bld_id
                 and cln_id is not null;
             exception
@@ -108,7 +108,7 @@ begin
             end if;
             
             -- Update oude buildings tabel (idempotent)
-            update  buildings
+            update  buildings2
             set     cln_id = ln_cln_id
             where   id = lt_old_data(i).bld_id;
             

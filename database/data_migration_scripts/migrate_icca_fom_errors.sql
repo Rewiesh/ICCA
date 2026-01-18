@@ -24,14 +24,14 @@ declare
         ,       frr.technicalaspects        as technical_aspects_remark
         ,       img1.doc_id                 as log_book_image_id
         ,       img2.doc_id                 as technical_aspects_image_id
-        from    formerrorelement  frr
-        join    forms             fom on fom.id = frr.formid
+        from    formerrorelement2  frr
+        join    forms2             fom on fom.id = frr.formid
         left join w_errortype     ete on ete.errortypeid = frr.errortypeid
         left join ElementType     epe on epe.elementtypeid = frr.elementid and epe.epe_id is not null
-        left join images          img1 on img1.imageid = frr.logbookimage
-        left join images          img2 on img2.imageid = frr.technicalaspectsimage
+        left join images2          img1 on img1.imageid = frr.logbookimage
+        left join images2          img2 on img2.imageid = frr.technicalaspectsimage
         where   fom.fom_id is not null
-        -- and frr.for_id is null
+        and frr.for_id is null
         ;
     
     type t_old_data is table of c_get_old_data%rowtype;
@@ -128,7 +128,7 @@ begin
             begin
                 select for_id 
                 into ln_existing_for_id
-                from formerrorelement
+                from formerrorelement2
                 where errorelementid = lt_old_data(i).frr_pk_id
                 and for_id is not null;
             exception
@@ -197,7 +197,7 @@ begin
             end if;
             
             -- Update oude formerrorelement tabel (idempotent)
-            update  formerrorelement
+            update  formerrorelement2
             set     for_id = ln_for_id
             where   errorelementid = lt_old_data(i).frr_pk_id;
             

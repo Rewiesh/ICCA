@@ -529,6 +529,15 @@ create or replace package body icca_pdf_icca_data as
                 join icca_areas ara on fom.ara_id = ara.id
                 where fom.adt_id = p_adt_id
                 and err.technical_aspects_image_id is not null
+            union all
+            select  img2.doc_id     as image_id
+            ,       fom.areacode ||': ' || rmk.remarktext  as beschrijving
+            from    auditremarks2 rmk
+            join    audits2 adt on adt.id = rmk.auditid
+            join    forms2 fom on fom.id = rmk.formid
+            join    images2 img2 on img2.imageid = remarkimage
+            where   adt.adt_id = p_adt_id
+            -- and     img2.doc_id is not null
         ) loop
             begin
                 -- Get file URL from database

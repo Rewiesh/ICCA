@@ -12,9 +12,9 @@ declare
         ,       case when adt.isactive = 1 then 'Y' else 'N' end    as active
         ,       case when adt.activate = 1 then 'Y' else 'N' end    as activate
         ,       case when adt.isdone = 1 then 'Y' else 'N' end      as audit_completed
-        from    audits adt
-        join    users_client cnt on adt.nameclient_id = cnt.id
-        join    buildings bld on adt.locationclient_id = bld.id        
+        from    audits2 adt
+        join    users_client2 cnt on adt.nameclient_id = cnt.id
+        join    buildings2 bld on adt.locationclient_id = bld.id        
         where   cnt.cnt_id is not null 
         and     bld.cln_id is not null
         -- and adt.adt_id is null
@@ -51,7 +51,7 @@ begin
             begin
                 select adt_id 
                 into ln_existing_adt_id
-                from audits
+                from audits2
                 where id = lt_old_data(i).old_adt_id
                 and adt_id is not null;
             exception
@@ -107,8 +107,8 @@ begin
                 dbms_output.put_line('✓ New audit created - adt_id: ' || ln_adt_id || ' for code: ' || lt_old_data(i).code);
             end if;
             
-            -- Update oude audits tabel (idempotent)
-            update  audits
+            -- Update oude audits2 tabel (idempotent)
+            update  audits2
             set     adt_id = ln_adt_id
             where   id = lt_old_data(i).old_adt_id;
             
@@ -121,7 +121,7 @@ begin
                 ,       pfr1.id         as new_pfr_id
                 ,       pfr.id          as old_pfr_id
                 ,       apr.auditid     as old_adt_id
-                from    auditauditor apr
+                from    auditauditor2 apr
                 join    users_auditor pfr on apr.auditorid = pfr.id
                 join    icca_users usr on usr.id = pfr.usr_id
                 join    icca_performers pfr1 on pfr1.usr_id = usr.id
@@ -210,9 +210,9 @@ begin
     dbms_output.put_line('========================================');
     dbms_output.put_line('AUDIT MIGRATION SUMMARY');
     dbms_output.put_line('========================================');
-    dbms_output.put_line('Total audits processed:         ' || ln_total_audits);
-    dbms_output.put_line('  - New audits created:         ' || ln_new_audits);
-    dbms_output.put_line('  - Existing audits reused:     ' || ln_reused_audits);
+    dbms_output.put_line('Total audits2 processed:         ' || ln_total_audits);
+    dbms_output.put_line('  - New audits2 created:         ' || ln_new_audits);
+    dbms_output.put_line('  - Existing audits2 reused:     ' || ln_reused_audits);
     dbms_output.put_line('');
     dbms_output.put_line('Audit-Performer mappings:');
     dbms_output.put_line('  - New mappings created:       ' || ln_new_adt_performers);
@@ -230,7 +230,7 @@ declare
         ,       adt.adt_id                  as new_adt_id
         ,       adt.locationmanagersignimage as old_image_id
         ,       img.doc_id                  as new_doc_id
-        from    audits adt
+        from    audits2 adt
         join    images img on img.imageid = adt.locationmanagersignimage
         where   adt.adt_id is not null
         and     img.doc_id is not null
@@ -289,7 +289,7 @@ begin
     dbms_output.put_line('========================================');
     dbms_output.put_line('UPDATE SUMMARY');
     dbms_output.put_line('========================================');
-    dbms_output.put_line('Total audits processed:         ' || ln_total_updated);
+    dbms_output.put_line('Total audits2 processed:         ' || ln_total_updated);
     dbms_output.put_line('  - Already correct:            ' || ln_already_correct);
     dbms_output.put_line('  - Newly updated:              ' || ln_newly_updated);
     dbms_output.put_line('========================================');

@@ -25,3 +25,5 @@ alter table icca_client_locations add constraint icca_cln_cnt_fk1 foreign key(cn
 -- indexes
 create unique index icca_cln_name_uk_idx1 on icca_client_locations (cnt_id, upper(name), upper(street_name), upper(city));
 drop index icca_cln_name_uk_idx1;
+
+CREATE INDEX icca_cln_cnt_id_idx ON icca_client_locations(cnt_id);

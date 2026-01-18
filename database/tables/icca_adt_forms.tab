@@ -29,3 +29,4 @@ alter table icca_adt_forms add constraint icca_fom_pfr_fk5 foreign key(pfr_id) r
 -- indexes
 -- create unique index icca_adm_usr_id_uk_idx1 on icca_adt_forms (usr_id);
 -- create unique index icca_adm_first_last_name_uk_idx2 on icca_adt_forms (upper(first_name), upper(last_name));
+CREATE INDEX icca_fom_adt_id_idx ON icca_adt_forms(adt_id);

@@ -1,13 +1,23 @@
 {
 	"folders": [
 		{
+			"name": "TeamPulse",
+			"path": "../../../../../../OneDrive/PersoonlijkProjecten/TeamPulse"
+		},
+		{
+			"name": "GeneratePdf",
 			"path": "../../../GeneratePdf"
 		},
 		{
+			"name": "ICCA",
 			"path": "../.."
 		},
 		{
+			"name": "QualityTesting",
 			"path": "../../../QualityTesting"
+		},
+		{
+			"path": "../../../ICCA Datamigratie PRD"
 		}
 	]
 }

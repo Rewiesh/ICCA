@@ -19,8 +19,8 @@ declare
         ,       fom.areacode                                            as migrated_area_code
         ,       substr(fom.areacode, 1, instr(fom.areacode, '-') - 1)   as verdieping 
         ,       substr(fom.areacode,instr(fom.areacode, '-') + 1,instr(fom.areacode, '.') - instr(fom.areacode, '-') - 1) as area
-        from    forms             fom
-        join    audits            adt on fom.auditid = adt.id
+        from    forms2             fom
+        join    audits2            adt on fom.auditid = adt.id
         join    floors            flr on fom.floorid = flr.id
         join    categories        cat on fom.categoryid = cat.id
         -- join    AreaDescriptions ara 
@@ -48,7 +48,7 @@ declare
                                 else 3
                             end
                     ) as rn
-            from    forms fom
+            from    forms2 fom
             cross join AreaDescriptions ara
             where   ara.ModuleId = 4
         ) ara_match 
@@ -106,7 +106,7 @@ begin
             begin
                 select fom_id 
                 into ln_existing_fom_id
-                from forms
+                from forms2
                 where id = lt_old_data(i).old_fom_id
                 and fom_id is not null;
             exception
@@ -166,7 +166,7 @@ begin
             end if;
             
             -- Update oude forms tabel (idempotent)
-            update  forms
+            update  forms2
             set     fom_id = ln_fom_id
             where   id = lt_old_data(i).old_fom_id;
             

@@ -104,8 +104,8 @@ begin
                 ,       cct.client_id   as old_client_id
                 ,       cct.category_id as old_category_id
                 from    categories cat
-                join    client_category cct on cct.category_id = cat.id
-                join    Users_Client cnt on cnt.id = cct.client_id
+                join    client_category2 cct on cct.category_id = cat.id
+                join    Users_Client2 cnt on cnt.id = cct.client_id
                 where   cat.id = lt_old_data(i).old_cat_id
                 and     cnt.cnt_id is not null
             ) loop
