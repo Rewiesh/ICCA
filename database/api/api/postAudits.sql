@@ -55,6 +55,12 @@ begin
     owa_util.mime_header ('application/json', true);
     htp.prn('{"id": "' || ln_audit_id || '"}');
 
+exception
+    when others then
+        -- stuur duidelijke foutmelding terug naar client
+        owa_util.status_line (400, '', false);
+        owa_util.mime_header ('application/json', true);
+        htp.prn('{"error": "' || apex_escape.json(sqlerrm) || '"}');
 end;
 ]'
                         );

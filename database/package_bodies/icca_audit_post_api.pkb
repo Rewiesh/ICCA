@@ -424,6 +424,54 @@ is
             for y in 1..p_forms(i).error.count
             loop
                 --
+                -- validatie: element_type_id en error_type_id mogen niet leeg zijn
+                if p_forms(i).error(y).element_type_id is null 
+                    or p_forms(i).error(y).error_type_id is null 
+                then
+                    declare
+                        lv_element_name varchar2(100);
+                        lv_error_name   varchar2(100);
+                        lv_error_msg    varchar2(4000);
+                    begin
+                        -- haal element type naam op
+                        if p_forms(i).error(y).element_type_id is not null then
+                            begin
+                                select name into lv_element_name
+                                from icca_elementtypes
+                                where id = p_forms(i).error(y).element_type_id;
+                            exception
+                                when no_data_found then
+                                    lv_element_name := 'Onbekend (ID: ' || p_forms(i).error(y).element_type_id || ')';
+                            end;
+                        else
+                            lv_element_name := 'NIET INGEVULD';
+                        end if;
+                        
+                        -- haal error type naam op
+                        if p_forms(i).error(y).error_type_id is not null then
+                            begin
+                                select name into lv_error_name
+                                from icca_error_types
+                                where id = p_forms(i).error(y).error_type_id;
+                            exception
+                                when no_data_found then
+                                    lv_error_name := 'Onbekend (ID: ' || p_forms(i).error(y).error_type_id || ')';
+                            end;
+                        else
+                            lv_error_name := 'NIET INGEVULD';
+                        end if;
+                        
+                        -- bouw gebruiksvriendelijke error message
+                        lv_error_msg := 'Fout bij formulier ' || p_forms(i).area_code || ': ' ||
+                                       'Fout #' || y || ' kan niet worden opgeslagen. ' ||
+                                       'Element: "' || lv_element_name || '", ' ||
+                                       'Soort fout: "' || lv_error_name || '". ' ||
+                                       'Beide velden zijn verplicht om een fout op te slaan.';
+                        
+                        raise_application_error(-20001, lv_error_msg);
+                    end;
+                end if;
+                --
                 merge into icca_fom_errors dest
                     using(  select  lr_fom.id                                       as fom_id
                             ,       p_forms(i).error(y).error_type_id               as ete_id
@@ -638,7 +686,7 @@ is
         if p_array is null or p_array.count = 0 then
             return null;
         end if;
-        
+
         for i in 1 .. p_array.count loop
             if i = 1 then
                 l_result := p_array(i);
@@ -646,7 +694,7 @@ is
                 l_result := l_result || p_separator || p_array(i);
             end if;
         end loop;
-        
+
         return l_result;
     end f_array_to_string;  
     --
@@ -679,11 +727,11 @@ is
                     cnt.company_name, cnt.contact_person, cnt.usr_id,
                     cln.id, cln.name, cln.contact_person, cln.email
             ;
-        
+
         -- constants
         gc_icca_email constant varchar2(100) := 'info@iccaadvies.eu';
         -- gc_icca_email constant varchar2(100) := 'ramcharanrewiesh98@hotmail.com';
-        
+
         -- variables
         lr_audit_data       c_get_audit_data%rowtype;
         l_email_addresses   varchar2(4000);
@@ -694,7 +742,7 @@ is
         -- Check 1: Bestaat de audit?
         open    c_get_audit_data( b_adt_id => p_adt_id );
         fetch   c_get_audit_data into lr_audit_data;
-        
+
         if c_get_audit_data%notfound then
             close c_get_audit_data;
             logger.log_warning(
@@ -704,9 +752,9 @@ is
             );
             return;  -- Stop, maar geen error
         end if;
-        
+
         close c_get_audit_data;
-        
+
         --
         -- Check 2: Zijn er forms voor deze audit?
         begin
@@ -719,7 +767,7 @@ is
             when no_data_found then
                 l_forms_count := 0;
         end;
-        
+
         if l_forms_count = 0 then
             logger.log_info(
                 p_text  => 'Geen forms gevonden voor audit - mail verzending overgeslagen',
@@ -729,14 +777,14 @@ is
             );
             return;  -- Stop, maar geen error
         end if;
-        
+
         logger.log_info(
             p_text  => 'Forms check geslaagd',
             p_scope => 'icca_audit_post_api.p_send_audit_mail',
             p_extra => 'ADT_ID=' || p_adt_id || 
                     ', FORMS_COUNT=' || l_forms_count
         );
-        
+
         --
         -- Verzamel ontvangers
         -- 1. Locatie email
@@ -744,7 +792,7 @@ is
             l_temp_emails.extend;
             l_temp_emails(l_temp_emails.count) := trim(lr_audit_data.cln_email);
         end if;
-        
+
         -- 2. User emails (kan meerdere zijn, comma-separated)
         if lr_audit_data.usr_emails is not null then
             -- Split de comma-separated usr_emails en voeg elk toe
@@ -760,14 +808,14 @@ is
                 end if;
             end loop;
         end if;
-        
+
         -- 3. ICCA email ALTIJD als extra ontvanger
         l_temp_emails.extend;
         l_temp_emails(l_temp_emails.count) := gc_icca_email;
-        
+
         -- Converteer array naar comma-separated string
         l_email_addresses := f_array_to_string(l_temp_emails);
-        
+
         -- Log welke emails verstuurd worden
         logger.log_info(
             p_text  => 'Start audit mail verzending via API',
@@ -778,20 +826,20 @@ is
                     ', EMAIL_COUNT=' || l_temp_emails.count ||
                     ', FORMS_COUNT=' || l_forms_count
         );
-        
+
         -- Roep de centrale audit mail procedure aan
         icca_audit_mail.p_send_audit_report(
             p_adt_id          => p_adt_id,
             p_email_addresses => l_email_addresses
         );
-        
+
         -- Log success
         logger.log_info(
             p_text  => 'Audit mail via API succesvol afgerond',
             p_scope => 'icca_audit_post_api.p_send_audit_mail',
             p_extra => 'ADT_ID=' || p_adt_id
         );
-        
+
     exception
         when others then
             logger.log_error(
