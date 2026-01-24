@@ -681,8 +681,8 @@ is
             ;
         
         -- constants
-        -- gc_icca_email constant varchar2(100) := 'info@iccaadvies.eu';
-        gc_icca_email constant varchar2(100) := 'ramcharanrewiesh98@hotmail.com';
+        gc_icca_email constant varchar2(100) := 'info@iccaadvies.eu';
+        -- gc_icca_email constant varchar2(100) := 'ramcharanrewiesh98@hotmail.com';
         
         -- variables
         lr_audit_data       c_get_audit_data%rowtype;

@@ -23,7 +23,7 @@ as
         -- Split op comma's en trim whitespace
         loop
             l_comma_pos := instr(p_email_string, ',', l_start);
-            
+
             if l_comma_pos = 0 then
                 -- Laatste email adres
                 l_email := trim(substr(p_email_string, l_start));
@@ -87,6 +87,7 @@ as
             select  adt.id
             ,       adt.code
             ,       adt.audit_date
+            ,       adt.last_control_date
             ,       cnt.company_name
             ,       cnt.contact_person       as cnt_contact_person
             ,       cln.name                 as location_name
@@ -96,7 +97,7 @@ as
             join    icca_client_locations   cln on cln.id = adt.cln_id
             where   adt.id = b_adt_id
             ;
-        
+
         -- variables
         lr_audit_data       c_get_audit_data%rowtype;
         l_recipients        sys.odcivarchar2list;
@@ -134,13 +135,13 @@ as
         -- Haal audit gegevens op
         open    c_get_audit_data( b_adt_id => p_adt_id );
         fetch   c_get_audit_data into lr_audit_data;
-        
+
         if c_get_audit_data%notfound then
             close c_get_audit_data;
             raise_application_error(-20003, 'Audit niet gevonden: ' || p_adt_id);
             dbms_output.put_line('Audit niet gevonden: ' || p_adt_id);
         end if;
-        
+
         close c_get_audit_data;
         --
         -- Bepaal contactpersoon
@@ -164,6 +165,17 @@ as
 
         --
         dbms_output.put_line('PDF filename: ' || l_pdf_filename);
+        -- l_doc_id := icca_file_upload.f_save_and_register_document(
+        --     p_blob          => l_pdf_blob
+        -- ,   p_filename      => l_pdf_filename
+        -- ,   p_mime_type     => 'application/pdf'
+        -- );
+        --
+        dbms_output.put_line('Document ID: ' || l_doc_id);
+        -- Update audit document
+        -- update  icca_audits
+        -- set     audit_doc_id = l_doc_id
+        -- where   id = p_adt_id;
         --
         -- Verstuur mail
         icca_mail.p_send_template_with_pdf(
@@ -173,7 +185,7 @@ as
             p_pdf_filename  => l_pdf_filename,
             p_param01       => lr_audit_data.code,
             p_param02       => lr_audit_data.location_name,
-            p_param03       => to_char(lr_audit_data.audit_date, 'DD-MM-YYYY'),
+            p_param03       => to_char(lr_audit_data.last_control_date, 'DD-MM-YYYY'),
             p_param04       => l_contact_person,
             po_log_id       => l_mail_log_id
         );
@@ -192,7 +204,7 @@ as
                       ', RECIPIENTS=' || l_recipients.count ||
                       ', MAIL_LOG_ID=' || l_mail_log_id
         );
-        
+
     exception
         when others then
             -- Cleanup

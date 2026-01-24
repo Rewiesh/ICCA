@@ -2,23 +2,30 @@ set serveroutput on;
 declare
     cursor c_get_old_data
     is
-        select  adt.id                                              as old_adt_id
-        ,       cnt.cnt_id                                          as new_cnt_id
-        ,       bld.cln_id                                          as new_cln_id
-        ,       adt.auditcode                                       as code
-        ,       adt.type                                            as type
-        ,       adt.date1                                           as audit_date
-        ,       adt.lastcontroldate                                 as last_control_date
-        ,       case when adt.isactive = 1 then 'Y' else 'N' end    as active
-        ,       case when adt.activate = 1 then 'Y' else 'N' end    as activate
-        ,       case when adt.isdone = 1 then 'Y' else 'N' end      as audit_completed
-        from    audits2 adt
-        join    users_client2 cnt on adt.nameclient_id = cnt.id
-        join    buildings2 bld on adt.locationclient_id = bld.id        
-        where   cnt.cnt_id is not null 
-        and     bld.cln_id is not null
-        -- and adt.adt_id is null
-        ;
+      select  adt.id                                              as old_adt_id
+      ,       cnt.cnt_id                                          as new_cnt_id
+      ,       bld.cln_id                                          as new_cln_id
+      ,       adt.auditcode                                       as code
+      ,       adt.type                                            as type
+      ,       adt.date1                                           as audit_date
+      ,       adt.lastcontroldate                                 as last_control_date
+      ,       case when adt.isactive = 1 then 'Y' else 'N' end    as active
+      ,       case when adt.activate = 1 then 'Y' else 'N' end    as activate
+      ,       case when adt.isdone = 1 then 'Y' else 'N' end      as audit_completed
+      from    audits2 adt
+      join    users_client2 cnt on adt.nameclient_id = cnt.id
+      join    buildings2 bld on adt.locationclient_id = bld.id
+      where   cnt.cnt_id is not null
+      and     bld.cln_id is not null
+      and     adt.adt_id is not null
+      and     adt.isdone = 1
+      and     exists (
+                select  1
+                from    icca_audits adt2
+                where   adt2.id   = adt.adt_id
+                and     adt2.code = adt.auditcode
+                and     adt2.audit_completed = 'N'
+              );
     
     type t_old_data is table of c_get_old_data%rowtype;
     lt_old_data t_old_data;
@@ -30,6 +37,7 @@ declare
     ln_total_audits number := 0;
     ln_new_audits number := 0;
     ln_reused_audits number := 0;
+    ln_updated_audits number := 0;
     ln_new_adt_performers number := 0;
     ln_reused_adt_performers number := 0;
 begin
@@ -73,11 +81,24 @@ begin
                 end;
             end if;
             
-            -- Audit aanmaken of hergebruiken
+            -- Audit aanmaken of bijwerken
             if ln_existing_adt_id is not null then
                 ln_adt_id := ln_existing_adt_id;
-                ln_reused_audits := ln_reused_audits + 1;
-                dbms_output.put_line('✓ Reusing audit - adt_id: ' || ln_adt_id || ' for code: ' || lt_old_data(i).code);
+                
+                update icca_audits
+                set type                = lt_old_data(i).type
+                ,   audit_date          = lt_old_data(i).audit_date
+                ,   last_control_date   = lt_old_data(i).last_control_date
+                ,   cnt_id              = lt_old_data(i).new_cnt_id
+                ,   cln_id              = lt_old_data(i).new_cln_id
+                ,   active              = lt_old_data(i).active
+                ,   activate            = lt_old_data(i).activate
+                ,   audit_completed     = lt_old_data(i).audit_completed
+                ,   migrated_data       = 'Y'
+                where id = ln_adt_id;
+                
+                ln_updated_audits := ln_updated_audits + 1;
+                dbms_output.put_line('✓ Audit updated - adt_id: ' || ln_adt_id || ' for code: ' || lt_old_data(i).code);
             else
                 insert into icca_audits(    code                
                                         ,   type                
@@ -212,7 +233,7 @@ begin
     dbms_output.put_line('========================================');
     dbms_output.put_line('Total audits2 processed:         ' || ln_total_audits);
     dbms_output.put_line('  - New audits2 created:         ' || ln_new_audits);
-    dbms_output.put_line('  - Existing audits2 reused:     ' || ln_reused_audits);
+    dbms_output.put_line('  - Existing audits2 updated:    ' || ln_updated_audits);
     dbms_output.put_line('');
     dbms_output.put_line('Audit-Performer mappings:');
     dbms_output.put_line('  - New mappings created:       ' || ln_new_adt_performers);
@@ -221,6 +242,80 @@ begin
 end;
 /
 
+
+
+set serveroutput on;
+declare
+    cursor c_get_signatures is
+        select  adt.id                      as old_adt_id
+        ,       adt.adt_id                  as new_adt_id
+        ,       adt.locationmanagersignimage as old_image_id
+        ,       img.doc_id                  as new_doc_id
+        from    audits2 adt
+        join    images img on img.imageid = adt.locationmanagersignimage
+        where   adt.adt_id is not null
+        and     img.doc_id is not null
+        and     adt.locationmanagersignimage is not null
+        ;
+    
+    ln_total_updated number := 0;
+    ln_already_correct number := 0;
+    ln_newly_updated number := 0;
+begin
+    dbms_output.put_line('========================================');
+    dbms_output.put_line('AUDIT SIGNATURE IMAGE UPDATE');
+    dbms_output.put_line('========================================');
+    dbms_output.put_line('');
+    
+    for sig in c_get_signatures loop
+        begin
+            -- Check of signature_image_id al correct is
+            declare
+                ln_current_doc_id number;
+            begin
+                select signature_image_id
+                into ln_current_doc_id
+                from icca_audits
+                where id = sig.new_adt_id;
+                
+                if ln_current_doc_id = sig.new_doc_id then
+                    ln_already_correct := ln_already_correct + 1;
+                    dbms_output.put_line('✓ Already correct - adt_id: ' || sig.new_adt_id || ' → doc_id: ' || sig.new_doc_id);
+                else
+                    -- Update de signature_image_id
+                    update icca_audits
+                    set signature_image_id = sig.new_doc_id
+                    where id = sig.new_adt_id;
+                    
+                    ln_newly_updated := ln_newly_updated + 1;
+                    dbms_output.put_line('✓ Updated - adt_id: ' || sig.new_adt_id || ' → doc_id: ' || sig.new_doc_id || ' (was: ' || nvl(to_char(ln_current_doc_id), 'NULL') || ')');
+                end if;
+            exception
+                when no_data_found then
+                    dbms_output.put_line('⚠ Audit not found - adt_id: ' || sig.new_adt_id);
+            end;
+            
+            ln_total_updated := ln_total_updated + 1;
+            
+        exception
+            when others then
+                dbms_output.put_line('✗ Error updating audit ' || sig.new_adt_id || ': ' || sqlerrm);
+        end;
+    end loop;
+    
+    commit;
+    
+    -- Summary
+    dbms_output.put_line('');
+    dbms_output.put_line('========================================');
+    dbms_output.put_line('UPDATE SUMMARY');
+    dbms_output.put_line('========================================');
+    dbms_output.put_line('Total audits2 processed:         ' || ln_total_updated);
+    dbms_output.put_line('  - Already correct:            ' || ln_already_correct);
+    dbms_output.put_line('  - Newly updated:              ' || ln_newly_updated);
+    dbms_output.put_line('========================================');
+end;
+/
 
 
 set serveroutput on;

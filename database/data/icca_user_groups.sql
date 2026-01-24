@@ -11,7 +11,7 @@ begin
             from    dual
             union
             select  'UGP_CLIENTS'
-            ,       'CLIENTS'
+            ,       'CLIENTS' 
              ,       null                    
             from    dual
           ) src

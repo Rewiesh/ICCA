@@ -43,6 +43,8 @@ begin
             -- ============================================
             
             -- Check of location al gemigreerd is via oude tabel
+            -- REMOVED: We want to force re-evaluation to fix incorrect merges (Gymzaal vs Bibliotheek)
+            /*
             begin
                 select cln_id 
                 into ln_existing_cln_id
@@ -53,6 +55,8 @@ begin
                 when no_data_found then
                     ln_existing_cln_id := null;
             end;
+            */
+            ln_existing_cln_id := null; -- Force lookup by attributes
             
             -- Als nog niet gemigreerd, check op unieke combinatie
             -- (cnt_id + street_name + city is uniek voor een locatie)
@@ -64,6 +68,7 @@ begin
                     where   cnt_id = lt_old_data(i).cnt_id
                     and     upper(nvl(street_name, 'NULL')) = upper(nvl(lt_old_data(i).street_name, 'NULL'))
                     and     upper(nvl(city, 'NULL')) = upper(nvl(lt_old_data(i).city, 'NULL'))
+                    and     upper(nvl(name, 'NULL')) = upper(nvl(lt_old_data(i).name, 'NULL')) -- Added name check
                     and     rownum = 1;
                 exception
                     when no_data_found then

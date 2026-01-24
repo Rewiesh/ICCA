@@ -7,51 +7,40 @@ using (
         'Mail die verstuurd wordt naar klant wanneer audit rapport is gegenereerd' as description,
         'Uw kwaliteitsrapport is klaar' as subject,
         null as body_plain,
-        '<html><head><style>' ||
-        'body{font-family:Arial,sans-serif;font-size:14px;color:#333;margin:0;padding:0;background-color:#f4f6f9}' ||
-        '.container{max-width:600px;margin:0 auto;background:white}' ||
-        '.logo-container{width:100%;overflow:hidden;max-height:200px;background-color:#f8f9fa}' ||
-        '.logo{width:100%;height:200px;object-fit:cover;object-position:center}' ||
-        '.title{background-color:#fff;padding:30px 25px;text-align:center}' ||
-        '.title h1{margin:0;font-size:28px;color:#1e40af}' ||
-        '.greeting{padding:25px;background:#fff}' ||
-        '.info-box{background-color:#3b82f6;padding:25px;color:white;margin:20px 0}' ||
-        '.info-box h2{margin:0 0 15px 0;color:white;font-size:20px}' ||
-        '.info-box p{margin:8px 0;font-size:15px}' ||
-        '.content{padding:25px}' ||
-        'table{width:100%;border-collapse:collapse;margin:20px 0;background:white}' ||
-        'th,td{border:none;padding:14px 16px;text-align:left}' ||
-        'th{background-color:#3b82f6;color:white;font-weight:600;text-transform:uppercase;font-size:12px;letter-spacing:0.5px}' ||
-        'th:last-child,td:last-child{text-align:right}' ||
-        'tr:nth-child(even){background:#f8f9fa}' ||
-        '.footer{background:#f7fafc;padding:20px;font-size:11px;color:#1d2022;text-align:center;border-top:1px solid #e1e8ed}' ||
-        '.company{color:#3b82f6;font-weight:bold}' ||
-        'a{color:#3b82f6;text-decoration:none}' ||
-        '</style></head><body>' ||
-        '<div class="container">' ||
-        '<div class="logo-container">' ||
-        '<img src="https://icca-dashboard.maxapex.net/uploads/iccamaillogo.jpg" alt="ICCA Advies" class="logo">' ||
-        '</div>' ||
-        '<div class="greeting">' ||
-        '<p><strong>Beste #P4#,</strong></p>' ||
-        '<p>Het kwaliteitsrapport van uw locatie <strong>#P2#</strong> is gereed en bijgevoegd aan deze mail.</p>' ||
-        '</div>' ||
-        '<div class="info-box">' ||
-        '<h2>Rapportgegevens</h2>' ||
-        '<p><strong>Audit nummer:</strong> #P1#</p>' ||
-        '<p><strong>Locatie:</strong> #P2#</p>' ||
-        '<p><strong>Controledatum:</strong> #P3#</p>' ||
-        '</div>' ||
-        '<div class="content">' ||
-        '<p>Heeft u vragen over de resultaten? Neem gerust contact met ons op via <a href="mailto:info@iccaadvies.eu">info@iccaadvies.eu</a></p>' ||
-        '<p>Met vriendelijke groet,<br><br><strong>Het ICCA Kwaliteitsteam</strong></p>' ||
-        '</div>' ||
-        '<div class="footer">' ||
-        '<p><span class="company">ICCA Advies</span><br>Kwaliteitscontrole &amp; Advies</p>' ||
-        '<p>E-mail: <a href="mailto:info@iccaadvies.eu">info@iccaadvies.eu</a></p>' ||
-        '<p>Verzonden: #P3#</p>' ||
-        '</div>' ||
-        '</div>' ||
+        '<!DOCTYPE html>' ||
+        '<html><head>' ||
+        '<meta name="viewport" content="width=device-width, initial-scale=1.0">' ||
+        '<style>body,table,td,a{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}table,td{mso-table-lspace:0pt;mso-table-rspace:0pt}img{-ms-interpolation-mode:bicubic}</style>' ||
+        '</head>' ||
+        '<body style="margin:0;padding:0;font-family:Arial,sans-serif;font-size:14px;color:#333333;background-color:#f4f6f9;">' ||
+        '<table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#f4f6f9;width:100%;"><tr><td align="center" style="padding:20px 0;">' ||
+        '<table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width:600px;background-color:#ffffff;margin:0 auto;width:100%;box-shadow:0 2px 4px rgba(0,0,0,0.1);">' ||
+        '<tr><td style="width:100%;background-color:#f8f9fa;text-align:center;padding:0;">' ||
+        '<img src="https://icca-dashboard.maxapex.net/uploads/iccamaillogo.jpg" alt="ICCA Advies" width="600" style="width:100%;height:auto;max-height:200px;object-fit:cover;display:block;border:0;">' ||
+        '</td></tr>' ||
+        '<tr><td style="padding:25px;background-color:#ffffff;">' ||
+        '<p style="margin:0 0 10px 0;font-family:Arial,sans-serif;font-size:14px;color:#333333;"><strong>Beste #P4#,</strong></p>' ||
+        '<p style="margin:0;font-family:Arial,sans-serif;font-size:14px;color:#333333;">Het kwaliteitsrapport van uw locatie <strong>#P2#</strong> is gereed en bijgevoegd aan deze mail.</p>' ||
+        '</td></tr>' ||
+        '<tr><td style="padding:0 25px;">' ||
+        '<table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#3b82f6;color:#ffffff;"><tr><td style="padding:25px;">' ||
+        '<h2 style="margin:0 0 15px 0;color:#ffffff;font-family:Arial,sans-serif;font-size:20px;font-weight:bold;">Rapportgegevens</h2>' ||
+        '<p style="margin:8px 0;font-family:Arial,sans-serif;font-size:15px;color:#ffffff;"><strong>Audit nummer:</strong> #P1#</p>' ||
+        '<p style="margin:8px 0;font-family:Arial,sans-serif;font-size:15px;color:#ffffff;"><strong>Locatie:</strong> #P2#</p>' ||
+        '<p style="margin:8px 0;font-family:Arial,sans-serif;font-size:15px;color:#ffffff;"><strong>Controledatum:</strong> #P3#</p>' ||
+        '</td></tr></table>' ||
+        '</td></tr>' ||
+        '<tr><td style="padding:25px;background-color:#ffffff;">' ||
+        '<p style="margin:0 0 10px 0;font-family:Arial,sans-serif;font-size:14px;color:#333333;">Heeft u vragen over de resultaten? Neem gerust contact met ons op via <a href="mailto:info@iccaadvies.eu" style="color:#3b82f6;text-decoration:none;font-weight:bold;">info@iccaadvies.eu</a></p>' ||
+        '<p style="margin:0;font-family:Arial,sans-serif;font-size:14px;color:#333333;">Met vriendelijke groet,<br><br><strong>Het ICCA Kwaliteitsteam</strong></p>' ||
+        '</td></tr>' ||
+        '<tr><td style="background-color:#f7fafc;padding:20px;text-align:center;border-top:1px solid #e1e8ed;">' ||
+        '<p style="margin:0 0 5px 0;font-family:Arial,sans-serif;font-size:11px;color:#1d2022;"><span style="color:#3b82f6;font-weight:bold;">ICCA Advies</span><br>Kwaliteitscontrole &amp; Advies</p>' ||
+        '<p style="margin:0 0 5px 0;font-family:Arial,sans-serif;font-size:11px;color:#1d2022;">E-mail: <a href="mailto:info@iccaadvies.eu" style="color:#3b82f6;text-decoration:none;">info@iccaadvies.eu</a></p>' ||
+        '<p style="margin:0;font-family:Arial,sans-serif;font-size:11px;color:#1d2022;">Verzonden: #P3#</p>' ||
+        '</td></tr>' ||
+        '</table>' ||
+        '</td></tr></table>' ||
         '</body></html>' as body_html
     from dual
 ) s
