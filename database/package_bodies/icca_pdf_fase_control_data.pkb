@@ -530,7 +530,7 @@ create or replace package body icca_pdf_fase_control_data as
             where fom.adt_id = p_adt_id
             and err.technical_aspects_image_id is not null
             union all
-            select  img2.doc_id     as image_id
+            select  nvl(img2.doc_id, 66023 )     as image_id
             ,       fom.areacode ||': ' || rmk.remarktext  as beschrijving
             from    auditremarks2 rmk
             join    audits2 adt on adt.id = rmk.auditid
@@ -539,7 +539,7 @@ create or replace package body icca_pdf_fase_control_data as
             where   adt.adt_id = p_adt_id
             -- and     img2.doc_id is not null
             union all
-            select  fmr.remark_image_id     as image_id
+            select  nvl(fmr.remark_image_id, 66023 )    as image_id
             ,       case
                         when fom.migrated_data = 'Y' then fom.migrated_area_code
                         else flr.name || '-' || ara.abbreviation || '.' || fom.area_number
