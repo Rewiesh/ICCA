@@ -1008,6 +1008,24 @@ create or replace package body icca_pdf_buro_hennie_dekker_data as
                 and err.technical_aspects_remark is not null
                 and ( err.added_default_ete_id is null
                 and err.added_default_epe_id is null )
+            union all
+            select  fom.areacode ||': ' || rmk.remarktext  as beschrijving
+            from    auditremarks2 rmk
+            join    audits2 adt on adt.id = rmk.auditid
+            join    forms2 fom on fom.id = rmk.formid
+            join    images2 img2 on img2.imageid = remarkimage
+            where   adt.adt_id = p_adt_id
+            -- and     img2.doc_id is not null
+            union all
+            select  case
+                        when fom.migrated_data = 'Y' then fom.migrated_area_code
+                        else flr.name || '-' || ara.abbreviation || '.' || fom.area_number
+                    end || ': ' || fmr.remark_text as beschrijving
+            from    icca_form_remarks fmr
+            join    icca_adt_forms fom on fom.id = fmr.fom_id
+            join    icca_floors flr on fom.flr_id = flr.id
+            join    icca_areas ara on fom.ara_id = ara.id
+            where   fom.adt_id = p_adt_id                
             order by 1
         ) loop
             l_obj := json_object_t();
@@ -1040,6 +1058,26 @@ create or replace package body icca_pdf_buro_hennie_dekker_data as
             on fom.id = err.fom_id
             where fom.adt_id = p_adt_id
                 and err.technical_aspects_image_id is not null
+            union all
+            select  img2.doc_id     as image_id
+            ,       fom.areacode ||': ' || rmk.remarktext  as beschrijving
+            from    auditremarks2 rmk
+            join    audits2 adt on adt.id = rmk.auditid
+            join    forms2 fom on fom.id = rmk.formid
+            join    images2 img2 on img2.imageid = remarkimage
+            where   adt.adt_id = p_adt_id
+            -- and     img2.doc_id is not null
+            union all
+            select  fmr.remark_image_id     as image_id
+            ,       case
+                        when fom.migrated_data = 'Y' then fom.migrated_area_code
+                        else flr.name || '-' || ara.abbreviation || '.' || fom.area_number
+                    end || ': ' || fmr.remark_text as beschrijving
+            from    icca_form_remarks fmr
+            join    icca_adt_forms fom on fom.id = fmr.fom_id
+            join    icca_floors flr on fom.flr_id = flr.id
+            join    icca_areas ara on fom.ara_id = ara.id
+            where   fom.adt_id = p_adt_id                
         ) loop
             -- Get file_url from icca_documents
             begin

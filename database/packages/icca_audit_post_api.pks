@@ -28,6 +28,13 @@ is
         );
     type tt_error is table of t_error index by pls_integer;
 
+    -- audit form remarks
+    type t_remark is record
+        (   remark_text     varchar2(4000)
+        ,   remark_image_id number
+        );
+    type tt_remarks is table of t_remark index by pls_integer;
+
     -- audit form
     type t_form is record
         (   id                  number
@@ -38,6 +45,7 @@ is
         ,   counter_elements    number
         ,   remarks             varchar2(4000)
         ,   error               tt_error
+        ,   remark              tt_remarks
         );
     type tt_forms is table of t_form index by pls_integer;
 

@@ -112,6 +112,40 @@ is
     end f_get_form_errors;
     --
     -----------------------------------------------------------------------------------------
+    --  convert: FORMS Remarks Json Object
+    function f_get_form_remarks(p_remarks_json_arr in json_array_t)
+    return tt_remarks
+    is
+        -- variables
+        lr_remarks      tt_remarks;
+        l_remark_obj    json_object_t;
+        l_count         pls_integer;
+    begin
+        --
+        if p_remarks_json_arr is null 
+        then
+            --
+            return lr_remarks;
+            --
+        end if;
+        --
+        l_count := p_remarks_json_arr.get_size;
+        --
+        for i in 0 .. l_count - 1 
+        loop
+            --
+            l_remark_obj := treat( p_remarks_json_arr.get(i) as json_object_t );
+            --
+            lr_remarks(i + 1).remark_text     := l_remark_obj.get_string('RemarkText');
+            lr_remarks(i + 1).remark_image_id := l_remark_obj.get_number('RemarkImageId');
+            --
+        end loop;
+        --
+        return lr_remarks;
+        --
+    end f_get_form_remarks;
+    --
+    -----------------------------------------------------------------------------------------
     --  convert: FORMS Json Object
     function f_get_forms( p_forms_json_arr  in json_array_t  )
     return tt_forms
@@ -147,6 +181,9 @@ is
 
             -- Nested errors
             lr_forms(i + 1).error := f_get_form_errors(l_form_obj.get_array('Errors'));
+            
+            -- Nested remarks array
+            lr_forms(i + 1).remark := f_get_form_remarks(l_form_obj.get_array('RemarksList'));
             --
         end loop;
         --
@@ -258,6 +295,18 @@ is
                     dbms_output.put_line('  ↳ errors            : []');
                 end if;
 
+                -- Nested remarks in the form
+                if p_audit.forms(i).remark.count > 0 
+                then
+                    for k in 1 .. p_audit.forms(i).remark.count 
+                    loop
+                        dbms_output.put_line('  ↳ remark('||k||').remark_text    : '||p_audit.forms(i).remark(k).remark_text);
+                        dbms_output.put_line('  ↳ remark('||k||').remark_image_id: '||p_audit.forms(i).remark(k).remark_image_id);
+                    end loop;
+                else
+                    dbms_output.put_line('  ↳ remarks           : []');
+                end if;
+
             end loop;
         else
             dbms_output.put_line('p_audit.forms            : []');
@@ -348,6 +397,35 @@ is
         end loop;
         --
     end p_update_audit_kpi_elements;
+    --
+    -----------------------------------------------------------------------------------------
+    --  
+    procedure p_create_form_remarks(   p_fom_id    in number
+                                   ,   p_remarks   in tt_remarks
+                                   )
+    is
+    begin
+        --
+        -- verwijder bestaande remarks voor deze form
+        delete from icca_form_remarks
+        where fom_id = p_fom_id;
+        --
+        -- insert nieuwe remarks
+        for i in 1..p_remarks.count
+        loop
+            insert into icca_form_remarks (
+                fom_id
+            ,   remark_text
+            ,   remark_image_id
+            )
+            values (
+                p_fom_id
+            ,   p_remarks(i).remark_text
+            ,   p_remarks(i).remark_image_id
+            );
+        end loop;
+        --
+    end p_create_form_remarks;
     --
     -----------------------------------------------------------------------------------------
     --
@@ -501,6 +579,14 @@ is
                 -- tel de errors op
                 ln_fom_tot_error_count := ln_fom_tot_error_count + p_forms(i).error(y).error_count;
             end loop;
+            --
+            -- opslaan van opmerkingen voor deze form (indien aanwezig)
+            if p_forms(i).remark.count > 0 then
+                p_create_form_remarks(
+                    p_fom_id    => lr_fom.id
+                ,   p_remarks   => p_forms(i).remark
+                );
+            end if;
             --
             -- update de form met het totaal aantal errors
             update  icca_adt_forms
