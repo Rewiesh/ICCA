@@ -473,10 +473,10 @@ create or replace package body icca_pdf_fase_control_data as
             join icca_adt_forms fom on fom.id = err.fom_id
             join icca_floors flr on fom.flr_id = flr.id
             join icca_areas ara on fom.ara_id = ara.id
+            left join icca_elementtypes epe on epe.id = err.epe_id
             where fom.adt_id = p_adt_id
             and err.log_book_image_id is not null
-            -- and (err.added_default_ete_id is null and err.added_default_epe_id is null)
-            order by flr.name, ara.abbreviation, fom.area_number
+            order by epe.name nulls last, flr.name, ara.abbreviation, fom.area_number
         ) loop
             begin
             select doc.file_url

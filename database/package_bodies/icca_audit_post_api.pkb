@@ -737,8 +737,6 @@ is
         --
         ln_adt_id := p_audit.id;
         --
-        -- update audit to completed
-        p_update_audit( p_pfr_id => p_pfr_id, p_adt_id => ln_adt_id , p_signature_image_id => p_audit.signature_image_id, p_last_control_date => p_audit.audit_date );
         -- --
         -- insert clients die aanwezig waren tijden de audit 
         p_create_audit_present_clients( p_adt_id            => ln_adt_id
@@ -756,6 +754,10 @@ is
         --
         -- bereken de audit resultaten
         p_calculate_audit_results( p_adt_id => ln_adt_id );
+        --
+        -- update audit to completed
+        p_update_audit( p_pfr_id => p_pfr_id, p_adt_id => ln_adt_id , p_signature_image_id => p_audit.signature_image_id, p_last_control_date => p_audit.audit_date );
+        --
         --
     end p_process_audit;
     --
