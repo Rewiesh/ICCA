@@ -875,10 +875,19 @@ is
 
         --
         -- Verzamel ontvangers
-        -- 1. Locatie email
+        -- 1. Locatie emails (kan meerdere zijn, comma-separated)
         if lr_audit_data.cln_email is not null then
-            l_temp_emails.extend;
-            l_temp_emails(l_temp_emails.count) := trim(lr_audit_data.cln_email);
+            -- Split de comma-separated cln_emails en voeg elk toe
+            for rec in (
+                select distinct trim(regexp_substr(lr_audit_data.cln_email, '[^,]+', 1, level)) as email
+                from   dual
+                connect by level <= regexp_count(lr_audit_data.cln_email, ',') + 1
+            ) loop
+                if rec.email is not null then
+                    l_temp_emails.extend;
+                    l_temp_emails(l_temp_emails.count) := rec.email;
+                end if;
+            end loop;
         end if;
 
         -- 2. User emails (kan meerdere zijn, comma-separated)
@@ -889,10 +898,24 @@ is
                 from   dual
                 connect by level <= regexp_count(lr_audit_data.usr_emails, ',') + 1
             ) loop
-                if rec.email is not null and rec.email != nvl(lr_audit_data.cln_email, 'X') then
-                    -- Voeg alleen toe als niet duplicate van locatie email
-                    l_temp_emails.extend;
-                    l_temp_emails(l_temp_emails.count) := rec.email;
+                if rec.email is not null then
+                    -- Check of email al bestaat in l_temp_emails
+                    declare
+                        l_email_exists boolean := false;
+                    begin
+                        for i in 1 .. l_temp_emails.count loop
+                            if l_temp_emails(i) = rec.email then
+                                l_email_exists := true;
+                                exit;
+                            end if;
+                        end loop;
+                        
+                        -- Voeg alleen toe als nog niet aanwezig
+                        if not l_email_exists then
+                            l_temp_emails.extend;
+                            l_temp_emails(l_temp_emails.count) := rec.email;
+                        end if;
+                    end;
                 end if;
             end loop;
         end if;

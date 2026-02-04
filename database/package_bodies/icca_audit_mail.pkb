@@ -146,8 +146,8 @@ as
         --
         -- Bepaal contactpersoon
         l_contact_person := coalesce(
-            lr_audit_data.cln_contact_person,
             lr_audit_data.cnt_contact_person,
+            -- lr_audit_data.cln_contact_person,
             'geachte relatie'
         );
         dbms_output.put_line('Contact person: ' || l_contact_person);

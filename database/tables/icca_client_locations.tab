@@ -11,7 +11,7 @@ create table icca_client_locations(
     ,   street_name     varchar2(255)
     ,   phone_number    varchar2(255)
     ,   mobile_number   varchar2(255)
-    ,   email           varchar2(255)
+    ,   email           varchar2(4000)
     ,   active          varchar2(1)   default 'Y'                               not null
     ,   migrated_data   varchar2(1 char) default 'N'                            not null
     ,   created_date    date          default sysdate                           not null
