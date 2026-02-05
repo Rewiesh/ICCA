@@ -24,7 +24,9 @@ as
         p_audit_code    in varchar2,
         p_company_name  in varchar2,
         p_jaar          in number,
-        p_maand         in number
+        p_maand         in number,
+        p_datum_vanaf   in date,
+        p_datum_tot     in date
     )
     return number
     is
@@ -39,7 +41,9 @@ as
         where   (p_audit_code is null or auditcode = p_audit_code)
         and     (p_company_name is null or upper(companyname) = upper(p_company_name))
         and     (p_jaar is null or jaar = p_jaar)
-        and     (p_maand is null or extract(month from audituitgevoerddatum) = p_maand);
+        and     (p_maand is null or extract(month from audituitgevoerddatum) = p_maand)
+        and     (p_datum_vanaf is null or trunc(audituitgevoerddatum) >= trunc(p_datum_vanaf))
+        and     (p_datum_tot is null or trunc(audituitgevoerddatum) <= trunc(p_datum_tot));
         --
         return ln_total_count;
         --
@@ -61,6 +65,8 @@ as
         p_company_name  in varchar2 default null,
         p_jaar          in number   default null,
         p_maand         in number   default null,
+        p_datum_vanaf   in date     default null,
+        p_datum_tot     in date     default null,
         p_page          in number   default 1,
         p_page_size     in number   default 1000
     )
@@ -73,6 +79,8 @@ as
             b_company_name  in varchar2,
             b_jaar          in number,
             b_maand         in number,
+            b_datum_vanaf   in date,
+            b_datum_tot     in date,
             b_offset        in number,
             b_fetch_rows    in number
         )
@@ -99,6 +107,8 @@ as
             and     (b_company_name is null or upper(companyname) = upper(b_company_name))
             and     (b_jaar is null or jaar = b_jaar)
             and     (b_maand is null or extract(month from audituitgevoerddatum) = b_maand)
+            and     (b_datum_vanaf is null or trunc(audituitgevoerddatum) >= trunc(b_datum_vanaf))
+            and     (b_datum_tot is null or trunc(audituitgevoerddatum) <= trunc(b_datum_tot))
             order by auditcode, categoryname, areacode
             offset b_offset rows fetch next b_fetch_rows rows only
             ;
@@ -117,6 +127,8 @@ as
             p_company_name, 
             p_jaar, 
             p_maand, 
+            p_datum_vanaf,
+            p_datum_tot,
             ln_offset, 
             nvl(p_page_size, 1000)
         )
@@ -154,6 +166,8 @@ as
         p_company_name  in varchar2 default null,
         p_jaar          in number   default null,
         p_maand         in number   default null,
+        p_datum_vanaf   in date     default null,
+        p_datum_tot     in date     default null,
         p_page          in number   default 1,
         p_page_size     in number   default 1000
     )
@@ -188,7 +202,7 @@ as
         ln_validated_page := greatest(nvl(p_page, 1), 1);
         --
         -- get total count with all filters
-        ln_total_count := f_get_total_count(p_audit_code, p_company_name, p_jaar, p_maand);
+        ln_total_count := f_get_total_count(p_audit_code, p_company_name, p_jaar, p_maand, p_datum_vanaf, p_datum_tot);
         --
         -- get audit results with pagination and filters
         lr_dashboard_api_rec.audit_results := f_audit_results_tab(
@@ -196,6 +210,8 @@ as
             p_company_name  => p_company_name,
             p_jaar          => p_jaar,
             p_maand         => p_maand,
+            p_datum_vanaf   => p_datum_vanaf,
+            p_datum_tot     => p_datum_tot,
             p_page          => ln_validated_page,
             p_page_size     => ln_validated_page_size
         );
@@ -319,6 +335,8 @@ as
         p_company_name  in varchar2 default null,
         p_jaar          in number   default null,
         p_maand         in number   default null,
+        p_datum_vanaf   in date     default null,
+        p_datum_tot     in date     default null,
         p_page          in number   default 1,
         p_page_size     in number   default 1000
     )
@@ -361,6 +379,8 @@ as
                 p_company_name  => p_company_name,
                 p_jaar          => p_jaar,
                 p_maand         => p_maand,
+                p_datum_vanaf   => p_datum_vanaf,
+                p_datum_tot     => p_datum_tot,
                 p_page          => p_page,
                 p_page_size     => ln_validated_page_size
             ) 
@@ -392,6 +412,8 @@ as
             logger.append_param(l_params, 'p_company_name', p_company_name);
             logger.append_param(l_params, 'p_jaar', p_jaar);
             logger.append_param(l_params, 'p_maand', p_maand);
+            logger.append_param(l_params, 'p_datum_vanaf', to_char(p_datum_vanaf, 'YYYY-MM-DD'));
+            logger.append_param(l_params, 'p_datum_tot', to_char(p_datum_tot, 'YYYY-MM-DD'));
             logger.append_param(l_params, 'p_page', p_page);
             logger.append_param(l_params, 'p_page_size', p_page_size);
             logger.log_error(

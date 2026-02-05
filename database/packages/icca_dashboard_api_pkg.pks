@@ -54,6 +54,8 @@ as
         p_company_name  in varchar2 default null,
         p_jaar          in number   default null,
         p_maand         in number   default null,
+        p_datum_vanaf   in date     default null,
+        p_datum_tot     in date     default null,
         p_page          in number   default 1,
         p_page_size     in number   default 1000
     );

@@ -18,6 +18,8 @@ begin
                                                         p_company_name => :company_name,
                                                         p_jaar         => :jaar,
                                                         p_maand        => :maand,
+                                                        p_datum_vanaf  => to_date(:datum_vanaf, ''YYYY-MM-DD''),
+                                                        p_datum_tot    => to_date(:datum_tot, ''YYYY-MM-DD''),
                                                         p_page         => nvl(:page, 1),
                                                         p_page_size    => nvl(:page_size, 1000)
                                                     );
@@ -81,7 +83,27 @@ begin
                           ,   p_name                => 'page_size'
                           ,   p_bind_variable_name  => 'page_size'
                           ,   p_source_type         => 'URI'
-                          ,   p_param_type          => 'INT'
+                          ,   p_param_type          => 'STRING'
+                          );
+
+    -- parameter: datum_vanaf (optioneel via query string, format: YYYY-MM-DD)
+    ords.define_parameter(    p_module_name         => 'api'
+                          ,   p_pattern             => 'getDashboardResults/'
+                          ,   p_method              => 'GET'
+                          ,   p_name                => 'datum_vanaf'
+                          ,   p_bind_variable_name  => 'datum_vanaf'
+                          ,   p_source_type         => 'URI'
+                          ,   p_param_type          => 'STRING'
+                          );
+
+    -- parameter: datum_tot (optioneel via query string, format: YYYY-MM-DD)
+    ords.define_parameter(    p_module_name         => 'api'
+                          ,   p_pattern             => 'getDashboardResults/'
+                          ,   p_method              => 'GET'
+                          ,   p_name                => 'datum_tot'
+                          ,   p_bind_variable_name  => 'datum_tot'
+                          ,   p_source_type         => 'URI'
+                          ,   p_param_type          => 'STRING'
                           );
 
     commit;
