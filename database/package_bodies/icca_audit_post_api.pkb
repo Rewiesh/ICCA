@@ -805,6 +805,7 @@ is
             ,       cln.name                 as location_name
             ,       cln.contact_person       as cln_contact_person
             ,       cln.email                as cln_email
+            ,       cnt.send_reports_to_default_email
             ,       listagg(ueml.email, ',') within group (order by ueml.created_date desc) as usr_emails
             from    icca_audits             adt
             join    icca_clients            cnt on cnt.id = adt.cnt_id
@@ -813,7 +814,8 @@ is
             where   adt.id = b_adt_id
             group by adt.id, adt.code, adt.audit_date, adt.cnt_id, 
                     cnt.company_name, cnt.contact_person, cnt.usr_id,
-                    cln.id, cln.name, cln.contact_person, cln.email
+                    cln.id, cln.name, cln.contact_person, cln.email,
+                    cnt.send_reports_to_default_email
             ;
 
         -- constants
@@ -920,9 +922,11 @@ is
             end loop;
         end if;
 
-        -- 3. ICCA email ALTIJD als extra ontvanger
-        l_temp_emails.extend;
-        l_temp_emails(l_temp_emails.count) := gc_icca_email;
+        -- 3. ICCA email alleen als extra ontvanger wanneer dit voor de klant is ingeschakeld
+        if lr_audit_data.send_reports_to_default_email = 'Y' then
+            l_temp_emails.extend;
+            l_temp_emails(l_temp_emails.count) := gc_icca_email;
+        end if;
 
         -- Converteer array naar comma-separated string
         l_email_addresses := f_array_to_string(l_temp_emails);
