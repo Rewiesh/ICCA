@@ -681,19 +681,22 @@ is
                                             ) * lt_audit_results(i).counter_elements
                                         );
             --
-            -- Ratio van fouten tot elementen
-            ln_audit_score_ratio := ( ln_approve_limit 
-                                      / case 
-                                          when lt_audit_results(i).counter_errors > 0 then lt_audit_results(i).counter_errors
-                                          else 1
-                                        end  
-                                    ) * 100;
-            --
-            -- get de audit score op basis van de ratio
-            open    c_get_audit_score( b_audit_ratio => ln_audit_score_ratio );
-            fetch   c_get_audit_score 
-            into    ln_audit_score;
-            close   c_get_audit_score;
+            -- Bepaal de audit score
+            if lt_audit_results(i).counter_errors = 0 then
+                -- Geen fouten: maximale score
+                ln_audit_score := 10;
+            else
+                -- Ratio van fouten tot elementen
+                ln_audit_score_ratio := ( ln_approve_limit 
+                                          / lt_audit_results(i).counter_errors
+                                        ) * 100;
+                --
+                -- get de audit score op basis van de ratio
+                open    c_get_audit_score( b_audit_ratio => ln_audit_score_ratio );
+                fetch   c_get_audit_score 
+                into    ln_audit_score;
+                close   c_get_audit_score;
+            end if;
             --
             -- insert de resultaten in de audit resultaten tabel
             merge into icca_adt_results dest
