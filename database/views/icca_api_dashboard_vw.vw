@@ -82,5 +82,6 @@ as
     left join w_adt_results         ars on ars.adt_id = adt.id and ars.cat_id = fom.cat_id
     where   adt.activate = 'Y'
     and     cnt.send_data_to_dashboard = 'Y'
+    and     adt.last_control_date is not null
     order by areacode
 ;
