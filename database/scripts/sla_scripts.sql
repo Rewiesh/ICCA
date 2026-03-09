@@ -37,3 +37,14 @@ from    icca_categories
 
 select  *
 from    icca_error_types
+;
+
+select  *
+from    icca_audits
+where   last_control_date > to_date('19-JAN-2026')
+and     cnt_id not in (
+  select  id
+  from    icca_clients
+  where   company_name in ('Test Company 1','Icca-Advies', 'Icca Advies', 'Testbedrijfanjali')
+)
+and   lower(type) not in ('test')
