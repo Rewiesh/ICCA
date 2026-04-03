@@ -961,12 +961,13 @@ is
     exception
         when others then
             logger.log_error(
-                p_text  => 'Fout bij versturen audit mail via API (processing gaat door)',
+                p_text  => 'Fout bij versturen audit mail via API',
                 p_scope => 'icca_audit_post_api.p_send_audit_mail',
                 p_extra => 'ADT_ID=' || p_adt_id || 
                         ', ERROR=' || sqlerrm ||
                         ', BACKTRACE=' || dbms_utility.format_error_backtrace
             );
+            -- raise; -- bewust uit: mail fouten mogen API processing niet blokkeren
     end p_send_audit_mail;
     --
     -----------------------------------------------------------------------------------------

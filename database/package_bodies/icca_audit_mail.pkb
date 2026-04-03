@@ -224,7 +224,7 @@ as
                           ', ERROR=' || sqlerrm ||
                           ', BACKTRACE=' || dbms_utility.format_error_backtrace
             );
-            -- raise;
+            -- raise; -- bewust uit: wordt aangeroepen vanuit API, mail fouten mogen processing niet blokkeren
     end p_send_audit_report;
     --
 end icca_audit_mail;

@@ -109,6 +109,7 @@ is
         ,   po_log_id               out number
     )
     is
+        pragma autonomous_transaction;
     begin
         --
         insert into icca_mail_log(
@@ -411,13 +412,14 @@ is
         utl_smtp.write_data(l_connection, 'Content-Disposition: attachment; filename="' || p_pdf_filename || '"' || gc_crlf || gc_crlf);
         --
         l_offset := 1;
+        l_step   := 48; -- 48 raw bytes = 64 base64 chars (binnen 76-teken MIME limiet per RFC 2045)
         while l_offset <= dbms_lob.getlength(p_pdf_blob) loop
             if l_offset + l_step - 1 > dbms_lob.getlength(p_pdf_blob) then
                 l_step := dbms_lob.getlength(p_pdf_blob) - l_offset + 1;
             end if;
             --
             dbms_lob.read(p_pdf_blob, l_step, l_offset, l_raw_buffer);
-            utl_smtp.write_data(l_connection, utl_raw.cast_to_varchar2(utl_encode.base64_encode(l_raw_buffer)));
+            utl_smtp.write_data(l_connection, utl_raw.cast_to_varchar2(utl_encode.base64_encode(l_raw_buffer)) || gc_crlf);
             --
             l_offset := l_offset + l_step;
         end loop;

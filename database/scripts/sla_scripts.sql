@@ -48,3 +48,51 @@ and     cnt_id not in (
   where   company_name in ('Test Company 1','Icca-Advies', 'Icca Advies', 'Testbedrijfanjali')
 )
 and   lower(type) not in ('test')
+;
+
+
+SELECT * --SUM(bytes)/1024/1024 AS MB 
+FROM dba_data_files;
+
+SELECT host_name FROM v$instance;
+
+SELECT 
+    ROUND(SUM(bytes)/1024/1024/1024, 2) AS total_gb
+FROM dba_data_files;
+
+select  *
+from    db_growth_log;
+
+
+CREATE TABLE db_growth_log (
+    log_date DATE DEFAULT SYSDATE,
+    size_mb NUMBER
+);
+
+INSERT INTO db_growth_log (size_mb)
+SELECT ROUND(SUM(bytes)/1024/1024, 2)
+FROM dba_segments
+WHERE tablespace_name = 'ICCA_TS';
+
+
+SELECT 
+    segment_name,
+    ROUND(bytes/1024/1024,2) MB
+FROM dba_segments
+WHERE tablespace_name = 'ICCA_TS'
+ORDER BY bytes DESC;
+
+PURGE DBA_RECYCLEBIN;
+
+
+select  to_address
+,       attachment_filename
+,       status
+,       sent_date
+,       created_by sent_by
+from    icca_mail_log
+where   attachment_filename like '%20136%'
+or attachment_filename like '%20479%'
+or attachment_filename like '%20478%'
+or attachment_filename like '%20432%'
+order by 1 desc
