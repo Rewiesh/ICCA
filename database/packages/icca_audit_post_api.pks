@@ -10,9 +10,9 @@ is
         (   id                  number -- ket_id
         ,   audit_id            number
         ,   elements_audit_id   number
-        ,   elementLabel        varchar2(100)
-        ,   elementValue        varchar2(100)
-        ,   elementComment      varchar2(100)
+        ,   elementLabel        varchar2(4000)
+        ,   elementValue        varchar2(4000)
+        ,   elementComment      varchar2(4000)
         );
     type tt_kpi_elements is table of t_kpi_element index by pls_integer;
 
@@ -52,7 +52,7 @@ is
     -- audit full record
     type t_audit is record
         (   id                  number
-        ,   code                varchar2(100)
+        ,   code                varchar2(4000)
         ,   audit_date          date
         ,   signature_image_id  number
         ,   present_clients     tt_present_clients
