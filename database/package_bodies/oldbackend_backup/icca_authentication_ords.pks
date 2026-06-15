@@ -9,11 +9,4 @@ is
         )
     return varchar2;
 
-    function get_oauth_credentials
-        ( p_username  in icca_users.username%type
-        , p_password  in icca_users.password%type
-        )
-    return varchar2;
-
 end icca_authentication_ords;
-/

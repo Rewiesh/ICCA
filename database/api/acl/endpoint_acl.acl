@@ -1,0 +1,13 @@
+begin
+   dbms_network_acl_admin.append_host_ace(
+      host => 'icca-dashboard.maxapex.net',
+      ace  => xs$ace_type(
+         privilege_list => xs$name_list(
+            'connect',
+            'resolve'
+         ),
+         principal_name => 'ICCA'
+      )
+   );
+end;
+/

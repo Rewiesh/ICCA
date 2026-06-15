@@ -27,7 +27,7 @@ declare
     ln_ige_id   number;
     ln_audit_id number;
 begin
-    icca_audit_post_api.p_msg_handler( 1648, ln_audit_id );
+    icca_audit_post_api.p_msg_handler( p_incomming_message_id => 1648, po_audit_id => ln_audit_id );
 end;
 /
 
