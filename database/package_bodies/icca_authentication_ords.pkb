@@ -100,10 +100,12 @@ is
             -- Get the token internally
             l_access_token := get_oauth_token;
             
+            -- status is altijd VALID als de user geauthenticeerd is (backward compatible met oude mob app)
+            -- accessToken wordt meegestuurd als bonus voor nieuwe mob app versies
             if l_access_token is not null then
                 l_response := '{"status": "VALID", "accessToken": "' || l_access_token || '"}';
             else
-                l_response := '{"status": "ERROR", "message": "Failed to generate token on backend"}';
+                l_response := '{"status": "VALID"}';
             end if;
             --
         else
