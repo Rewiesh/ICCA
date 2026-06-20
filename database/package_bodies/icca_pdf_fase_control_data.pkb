@@ -2,7 +2,26 @@ create or replace package body icca_pdf_fase_control_data as
     --
     -- Private constants
     --
-    c_base_url constant varchar2(100) := 'http://localhost:3000';
+    c_config_key_pdf_url constant varchar2(100) := 'PDF_SERVICE_URL';
+    c_default_pdf_url    constant varchar2(100) := 'http://localhost:3000';
+
+    --
+    -- Helper: haal PDF service URL op uit icca_app_config
+    --
+    function f_get_pdf_service_url return varchar2 is
+        l_pdf_service_url icca_app_config.config_value%type;
+    begin
+        select config_value
+        into   l_pdf_service_url
+        from   icca_app_config
+        where  config_key = c_config_key_pdf_url
+        and    active_ind = 'Y';
+
+        return nvl(l_pdf_service_url, c_default_pdf_url);
+    exception
+        when no_data_found then
+            return c_default_pdf_url;
+    end f_get_pdf_service_url;
 
     --
     -- Helper: Formatteer datum kort (bijv. "5-jan-24")
@@ -139,7 +158,7 @@ create or replace package body icca_pdf_fase_control_data as
 
         -- Client logo URL
         if l_client_rec.logo_id is not null and l_client_logo_url is not null then
-            l_obj.put('client_logo_url', c_base_url || l_client_logo_url);
+            l_obj.put('client_logo_url', f_get_pdf_service_url || l_client_logo_url);
         else
             l_obj.put('client_logo_url', '');
         end if;

@@ -20,7 +20,8 @@ create or replace package icca_pdf_generator as
 
     --
     -- Helper: roep Node.js PDF service aan met template
-    -- Endpoint: POST http://localhost:3000/generate-pdf-template
+    -- Endpoint: POST {PDF_SERVICE_URL}/generate-pdf-template
+    -- URL wordt opgehaald uit icca_app_config (PDF_SERVICE_URL)
     -- Valideert template naam tegen whitelist
     --
     function f_call_pdf_service (
@@ -30,7 +31,8 @@ create or replace package icca_pdf_generator as
 
     --
     -- Utility: refresh template cache in Node.js service
-    -- Endpoint: GET http://localhost:3000/templates/refresh
+    -- Endpoint: GET {PDF_SERVICE_URL}/templates/refresh
+    -- URL wordt opgehaald uit icca_app_config (PDF_SERVICE_URL)
     --
     procedure p_refresh_template_cache;
 end icca_pdf_generator;

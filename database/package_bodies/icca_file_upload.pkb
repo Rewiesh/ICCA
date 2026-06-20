@@ -2,6 +2,27 @@ create or replace package body icca_file_upload as
 
     --
     gc_upload_dir constant varchar2(50) := 'ICCA_UPLOADS';
+    gc_config_key_pdf_url constant varchar2(100) := 'PDF_SERVICE_URL';
+    gc_default_pdf_url    constant varchar2(100) := 'http://localhost:3000';
+    --
+
+    --
+    -- Haal PDF service URL op uit icca_app_config
+    --
+    function f_get_pdf_service_url return varchar2 is
+        l_pdf_service_url icca_app_config.config_value%type;
+    begin
+        select config_value
+        into   l_pdf_service_url
+        from   icca_app_config
+        where  config_key = gc_config_key_pdf_url
+        and    active_ind = 'Y';
+
+        return nvl(l_pdf_service_url, gc_default_pdf_url);
+    exception
+        when no_data_found then
+            return gc_default_pdf_url;
+    end f_get_pdf_service_url;
     --
 
     function f_save_uploaded_file(
@@ -239,11 +260,10 @@ create or replace package body icca_file_upload as
     is
         l_response      clob;
         l_base64_data   clob;
-        c_base_url      constant varchar2(100) := 'http://localhost:3000';
     begin
         -- Call Node.js endpoint to get resized Base64 image
         l_response := apex_web_service.make_rest_request(
-            p_url         => c_base_url || '/get-resized-base64',
+            p_url         => f_get_pdf_service_url || '/get-resized-base64',
             p_http_method => 'GET',
             p_parm_name   => apex_util.string_to_table('path:width:height'),
             p_parm_value  => apex_util.string_to_table(p_file_path || ':' || p_width || ':' || p_height)

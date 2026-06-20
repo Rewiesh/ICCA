@@ -2,7 +2,26 @@ create or replace package body icca_pdf_buro_hennie_dekker_data as
     --
     -- Private constants
     --
-    c_base_url constant varchar2(100) := 'http://localhost:3000'; -- Aanpassen naar echte URL indien nodig
+    c_config_key_pdf_url constant varchar2(100) := 'PDF_SERVICE_URL';
+    c_default_pdf_url    constant varchar2(100) := 'http://localhost:3000';
+
+    --
+    -- Helper: haal PDF service URL op uit icca_app_config
+    --
+    function f_get_pdf_service_url return varchar2 is
+        l_pdf_service_url icca_app_config.config_value%type;
+    begin
+        select config_value
+        into   l_pdf_service_url
+        from   icca_app_config
+        where  config_key = c_config_key_pdf_url
+        and    active_ind = 'Y';
+
+        return nvl(l_pdf_service_url, c_default_pdf_url);
+    exception
+        when no_data_found then
+            return c_default_pdf_url;
+    end f_get_pdf_service_url;
 
     --
     -- Helper: Formatteer datum
@@ -220,7 +239,7 @@ create or replace package body icca_pdf_buro_hennie_dekker_data as
         if l_client_rec.logo_id is not null then
             l_obj.put(
                 'client_logo_url',
-                c_base_url || l_client_logo_url
+                f_get_pdf_service_url || l_client_logo_url
             ); -- Extensie?
         else
             l_obj.put(
@@ -232,7 +251,7 @@ create or replace package body icca_pdf_buro_hennie_dekker_data as
         if l_audit_rec.signature_image_id is not null then
             l_obj.put(
                 'handtekening_url',
-                c_base_url || l_handtekening_url
+                f_get_pdf_service_url || l_handtekening_url
             );
         else
             l_obj.put(

@@ -2,7 +2,7 @@
 merge into icca_app_config t
 using (
     select 'OAUTH_CLIENT_ID' as config_key, 
-           'vlp-2lhHEggSF1U-DRpjaA..' as config_value, 
+           'lh9RDdZ3VIPi2hR3MuAiQA..' as config_value, 
            'OAuth client_id for mobile application authentication' as description,
            'N' as is_encrypted
     from dual
@@ -19,7 +19,7 @@ when not matched then
 merge into icca_app_config t
 using (
     select 'OAUTH_CLIENT_SECRET' as config_key, 
-           'd8oAU_Sil3qCRDsbc7qnJQ..' as config_value, 
+           'XrPbi-zsAZLOU_kjYk9LVg..' as config_value, 
            'OAuth client_secret for mobile application authentication' as description,
            'N' as is_encrypted
     from dual
@@ -36,7 +36,7 @@ when not matched then
 merge into icca_app_config t
 using (
     select 'OAUTH_TOKEN_URL' as config_key, 
-           'http://icca-dashboard.maxapex.net/ords/icca/oauth/token' as config_value, 
+           'https://icca-dashboard.maxapex.net/ords/icca/oauth/token' as config_value, 
            'OAuth Token endpoint URL for loopback call' as description,
            'N' as is_encrypted
     from dual
@@ -54,7 +54,7 @@ commit;
 
 
 update icca_app_config
-set config_value = 'http://icca-dashboard.maxapex.net/ords/icca/oauth/token'
+set config_value = 'https://icca-dashboard.maxapex.net/ords/icca/oauth/token'
 where config_key = 'OAUTH_TOKEN_URL';
 
 commit;

@@ -40,7 +40,7 @@ begin
     l_credentials := replace(l_credentials, chr(13)||chr(10), ''); 
 
     -- 3. HTTP Request uitvoeren
-    dbms_output.put_line('Starten UTL_HTTP request via HTTP...');
+    dbms_output.put_line('Starten UTL_HTTP request via HTTPS...');
     
     l_req := utl_http.begin_request(l_token_url, 'POST', 'HTTP/1.1');
     utl_http.set_header(l_req, 'Content-Type', 'application/x-www-form-urlencoded');

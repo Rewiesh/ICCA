@@ -1,16 +1,80 @@
 {
 	"folders": [
 		{
-			"path": "../../../../OneDrive/PersoonlijkProjecten/TeamPulse"
+			"name": "TeamPulse",
+			"path": "../../OneDrive/PersoonlijkProjecten/TeamPulse"
 		},
 		{
-			"path": "../QualityTesting"
+			"name": "GeneratePdf",
+			"path": "../GeneratePdf"
 		},
 		{
+			"name": "algemeen",
+			"path": "../algemeen"
+		},
+		{
+			"name": "authenticatie-en-autorisatie",
+			"path": "../authenticatie-en-autorisatie"
+		},
+		{
+			"name": "automation-engine",
+			"path": "../automation-engine"
+		},
+		{
+			"name": "brand-hoofdportaal",
+			"path": "../brand-hoofdportaal"
+		},
+		{
+			"name": "documenten-service",
+			"path": "../documenten-service"
+		},
+		{
+			"name": "financiele-administratie",
+			"path": "../financiele-administratie"
+		},
+		{
+			"name": "inspectie-hoofdportaal",
+			"path": "../inspectie-hoofdportaal"
+		},
+		{
+			"name": "inte-great-dashboard",
+			"path": "../inte-great-dashboard"
+		},
+		{
+			"name": "klant-integratie",
+			"path": "../klant-integratie"
+		},
+		{
+			"name": "master-theme",
+			"path": "../master-theme"
+		},
+		{
+			"name": "motorrijtuigen-agentenportaal",
+			"path": "../motorrijtuigen-agentenportaal"
+		},
+		{
+			"name": "motorrijtuigen-hoofdportaal",
+			"path": "../motorrijtuigen-hoofdportaal"
+		},
+		{
+			"name": "motorrijtuigen-schadeportaal",
+			"path": "../motorrijtuigen-schadeportaal"
+		},
+		{
+			"name": "relaties",
+			"path": "../relaties"
+		},
+		{
+			"name": "TeamPulse",
+			"path": "../TeamPulse"
+		},
+		{
+			"name": "ICCA",
 			"path": "."
 		},
 		{
-			"path": "../GeneratePdf"
+			"name": "QualityTesting",
+			"path": "../QualityTesting"
 		}
 	],
 	"settings": {}

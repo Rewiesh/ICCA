@@ -7,9 +7,28 @@ create or replace package body icca_pdf_generator as
     --
 
     -- constanten
-    c_pdf_service_url   constant varchar2(200) := 'http://localhost:3000';
-    c_endpoint_template constant varchar2(200) := '/generate-pdf-template';
-    c_endpoint_refresh  constant varchar2(200) := '/templates/refresh';
+    c_pdf_service_url_default constant varchar2(200) := 'http://localhost:3000';
+    c_endpoint_template       constant varchar2(200) := '/generate-pdf-template';
+    c_endpoint_refresh        constant varchar2(200) := '/templates/refresh';
+    c_config_key_pdf_url      constant varchar2(100) := 'PDF_SERVICE_URL';
+
+    --
+    -- Haal PDF service URL op uit icca_app_config, met fallback naar localhost
+    --
+    function f_get_pdf_service_url return varchar2 is
+        l_pdf_service_url icca_app_config.config_value%type;
+    begin
+        select config_value
+        into   l_pdf_service_url
+        from   icca_app_config
+        where  config_key = c_config_key_pdf_url
+        and    active_ind = 'Y';
+
+        return nvl(l_pdf_service_url, c_pdf_service_url_default);
+    exception
+        when no_data_found then
+            return c_pdf_service_url_default;
+    end f_get_pdf_service_url;
 
     --
     -- ========================================================================
@@ -65,7 +84,7 @@ create or replace package body icca_pdf_generator as
         end if;
         
         -- bouw url
-        l_url := c_pdf_service_url || c_endpoint_template;
+        l_url := f_get_pdf_service_url || c_endpoint_template;
         apex_debug.info(
             'Calling PDF service: url=%s, json_size=%s',
             l_url,
@@ -146,7 +165,7 @@ create or replace package body icca_pdf_generator as
         apex_debug.message('p_refresh_template_cache: start');
             
         -- bouw url
-        l_url := c_pdf_service_url || c_endpoint_refresh;
+        l_url := f_get_pdf_service_url || c_endpoint_refresh;
         apex_debug.info(
             'Calling refresh endpoint: %s',
             l_url
