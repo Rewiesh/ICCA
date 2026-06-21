@@ -205,7 +205,13 @@ is
         --
         lr_audit.id                 := l_audit_obj.get_number( 'Id' );
         lr_audit.code               := l_audit_obj.get_string( 'Code' );
-        lr_audit.audit_date         := cast( to_timestamp(replace(l_audit_obj.get_string('DateTime'), 'Z', ''), 'YYYY-MM-DD"T"HH24:MI:SS.FF3')  as date);
+        lr_audit.audit_date         := cast(
+                                         from_tz(
+                                             to_timestamp(replace(l_audit_obj.get_string('DateTime'), 'Z', ''), 'YYYY-MM-DD"T"HH24:MI:SS.FF3'),
+                                             'UTC'
+                                         ) at time zone 'Europe/Amsterdam'
+                                         as date
+                                     );
         lr_audit.signature_image_id := l_audit_obj.get_string( 'SignatureImageId' );
         --
         lr_audit.present_clients    := f_get_present_clients( l_audit_obj.get_array('PresentClients') );
