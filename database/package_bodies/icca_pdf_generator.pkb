@@ -46,7 +46,8 @@ create or replace package body icca_pdf_generator as
         return p_template_name in ( 'BURO_HENNIE_DEKKER',
                                     'ICCA',
                                     'ICCA_ZONDER_CIJFERS',
-                                    'FASE_CONTROL' );
+                                    'FASE_CONTROL',
+                                    'BLINCK' );
     end f_is_valid_template;
 
     --
@@ -231,6 +232,7 @@ create or replace package body icca_pdf_generator as
                         when cnt.audit_report_type = 'ICCA_ZONDER_CIJFER' then 'ICCA_ZONDER_CIJFERS'
                         when cnt.audit_report_type = 'FASE_CONTROL' then 'FASE_CONTROL'
                         when cnt.audit_report_type = 'BURO_HENNIE_DEKKER' then 'BURO_HENNIE_DEKKER'
+                        when cnt.audit_report_type = 'BLINCK' then 'BLINCK'
                         when cnt.audit_report_type = 'ICCA' then 'ICCA'
                             else 'ICCA'
                     end
@@ -261,6 +263,7 @@ create or replace package body icca_pdf_generator as
         -- bouw JSON op basis van template type
         l_json_data := case upper(trim(l_template_name))
             when 'BURO_HENNIE_DEKKER'   then icca_pdf_buro_hennie_dekker_data.f_get_main_json(p_adt_id)
+            when 'BLINCK'               then icca_pdf_blinck_data.f_get_main_json(p_adt_id)
             when 'ICCA'                 then icca_pdf_icca_data.f_get_main_json(p_adt_id)
             when 'ICCA_ZONDER_CIJFERS'  then icca_pdf_icca_zonder_cijfers_data.f_get_main_json(p_adt_id)
             when 'FASE_CONTROL'         then icca_pdf_fase_control_data.f_get_main_json(p_adt_id)
