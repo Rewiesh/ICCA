@@ -15,6 +15,7 @@ create table icca_clients(
     ,   logo_id                         number
     ,   zip_code                        varchar2(255)
     ,   audit_report_type               varchar2(100)       default 'ICCA' not null
+    ,   report_brand                    varchar2(20)        default 'ICCA' not null
     ,   url_client_portal               varchar2(4000)
     ,   send_data_to_dashboard          varchar2(1)         default 'N' not null
     ,   send_reports_to_default_email   varchar2(1)         default 'N' not null
@@ -39,8 +40,22 @@ CREATE INDEX icca_cnt_bch_id_idx ON icca_clients(bch_id);
 -- alter table icca_clients add constraint icca_cnt_audit_report_type_ck check (audit_report_type in ('ICCA', 'FASE_CONTROL', 'BURO_HENNIE_DEKKER', 'ICCA_ZONDER_CIJFER'));
 -- alter table icca_clients add url_client_portal varchar2(4000);
 -- alter table icca_clients add send_reports_to_default_email varchar2(1) default 'N' not null;
+-- alter table icca_clients add report_brand varchar2(20) default 'ICCA' not null;
+-- alter table icca_clients add constraint icca_cnt_report_brand_ck check (report_brand in ('ICCA', 'OVSR', 'BLINCK'));
 
 -- 0 => ICCA
 -- 1 => Fase Control
 -- 2 => Buro Hennie Dekker
 -- 3 => ICCA zonder cijfer
+
+-- report_brand: huisstijl van het voorblad, los van audit_report_type (dat bepaalt de
+-- rapport-inhoud/het sjabloon). OVSR is een tussenpersoon met meerdere eigen klanten
+-- verspreid over ICCA/FASE_CONTROL/ICCA_ZONDER_CIJFER; report_brand = 'OVSR' laat het
+-- sjabloon "Ter attentie van" weglaten en toont "Leverancier:" ipv "Aanwezig leverancier:".
+-- ICCA   => standaard ICCA-huisstijl
+-- OVSR   => huisstijl voor OVSR en diens klanten (o.a. COA Midden Zuid)
+-- BLINCK => gereserveerd voor Blinck (audit_report_type = 'BLINCK'); BLINCK_RAPPORT.hbs
+--           bevat dezelfde "Ter attentie van"/"Aanwezig leverancier" regels als de andere
+--           templates, maar leest report_brand nu nog niet -- pas icca_pdf_blinck_data.pkb
+--           en BLINCK_RAPPORT.hbs op dezelfde manier aan als de andere drie zodra Blinck
+--           een vergelijkbare wijziging vraagt.

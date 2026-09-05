@@ -35,7 +35,7 @@ create or replace package body icca_pdf_buro_hennie_dekker_data as
             'DD-MM-YYYY'
         );
     end f_format_date;
-
+ 
     --
     -- Helper: Formatteer tijd
     --

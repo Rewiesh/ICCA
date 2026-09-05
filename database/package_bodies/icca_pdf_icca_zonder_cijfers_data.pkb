@@ -160,6 +160,12 @@ create or replace package body icca_pdf_icca_zonder_cijfers_data as
         l_obj.put('tijdstip_controle', f_format_time(l_audit_rec.last_control_date));
         l_obj.put('controle_uitgevoerd_door', l_performer_name);
         l_obj.put('aanwezig_leverancier', nvl(l_present_client, 'n.v.t.'));
+        -- Reseller-huisstijl (OVSR e.d.): voorblad-varianten los van audit_report_type
+        l_obj.put('toon_ter_attentie_van', l_client_rec.report_brand != 'OVSR');
+        l_obj.put(
+            'leverancier_label',
+            case when l_client_rec.report_brand = 'OVSR' then 'Leverancier' else 'Aanwezig leverancier' end
+        );
         l_obj.put('controle_datum_lang', f_format_date_long(l_audit_rec.last_control_date));
         l_obj.put('locatie_naam', nvl(l_location_rec.name, ''));
         l_obj.put('locatie_adres', nvl(l_location_rec.street_name, l_client_rec.street_name));
