@@ -1078,16 +1078,16 @@ create or replace package body icca_pdf_buro_hennie_dekker_data as
             where fom.adt_id = p_adt_id
                 and err.technical_aspects_image_id is not null
             union all
-            select  nvl(img2.doc_id, 66023 )     as image_id
+            select  img2.doc_id     as image_id
             ,       fom.areacode ||': ' || rmk.remarktext  as beschrijving
             from    auditremarks2 rmk
             join    audits2 adt on adt.id = rmk.auditid
             join    forms2 fom on fom.id = rmk.formid
             join    images2 img2 on img2.imageid = remarkimage
             where   adt.adt_id = p_adt_id
-            -- and     img2.doc_id is not null
+            and     img2.doc_id is not null
             union all
-            select  nvl(fmr.remark_image_id, 66023 )     as image_id
+            select  fmr.remark_image_id     as image_id
             ,       case
                         when fom.migrated_data = 'Y' then fom.migrated_area_code
                         else flr.name || '-' || ara.abbreviation || '.' || fom.area_number
@@ -1096,7 +1096,8 @@ create or replace package body icca_pdf_buro_hennie_dekker_data as
             join    icca_adt_forms fom on fom.id = fmr.fom_id
             join    icca_floors flr on fom.flr_id = flr.id
             join    icca_areas ara on fom.ara_id = ara.id
-            where   fom.adt_id = p_adt_id                
+            where   fom.adt_id = p_adt_id
+            and     fmr.remark_image_id is not null
         ) loop
             -- Get file_url from icca_documents
             begin
