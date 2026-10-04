@@ -16,6 +16,9 @@ as
             select  id
             ,       name
             from    icca_floors
+            -- 'Bgg' is een dubbele van 'Bg' en breekt de verdieping-sortering in de app
+            -- (compareFloors in database1.js kent alleen 'bg' en getallen)
+            where   upper(name) != 'BGG'
             ;
         -- 
         -- variables
