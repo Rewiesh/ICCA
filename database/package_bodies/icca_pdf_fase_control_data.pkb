@@ -83,6 +83,7 @@ create or replace package body icca_pdf_fase_control_data as
         l_client_logo_url  varchar2(4000);
         l_performer_name   varchar2(200);
         l_present_client   varchar2(200);
+        l_resultaat        varchar2(20);
     begin
         -- Haal audit, client en locatie op
         select adt.*
@@ -152,11 +153,23 @@ create or replace package body icca_pdf_fase_control_data as
         l_obj.put('controle_uitgevoerd_door', l_performer_name);
         l_obj.put('aanwezig_leverancier', nvl(l_present_client, 'n.v.t.'));
         -- Reseller-huisstijl (OVSR e.d.): voorblad-varianten los van audit_report_type
-        l_obj.put('toon_ter_attentie_van', l_client_rec.report_brand != 'OVSR');
+        l_obj.put('toon_ter_attentie_van', l_client_rec.report_brand not in ('OVSR', 'OVSR2'));
         l_obj.put(
             'leverancier_label',
-            case when l_client_rec.report_brand = 'OVSR' then 'Leverancier' else 'Aanwezig leverancier' end
+            case when l_client_rec.report_brand in ('OVSR', 'OVSR2') then 'Leverancier' else 'Aanwezig leverancier' end
         );
+        -- OVSR2: "Resultaat" op de plek van "Ter attentie van"; onvoldoende zodra een categorie onvoldoende is
+        l_obj.put('toon_resultaat', l_client_rec.report_brand = 'OVSR2');
+        if l_client_rec.report_brand = 'OVSR2' then
+            select case when count(case when res.is_sufficient = 'N' then 1 end) > 0
+                        then 'Onvoldoende'
+                        else 'Voldoende'
+                   end
+                into l_resultaat
+                from icca_adt_results res
+                where res.adt_id = p_adt_id;
+            l_obj.put('resultaat', l_resultaat);
+        end if;
         l_obj.put('controle_datum_lang', f_format_date_long(l_audit_rec.last_control_date));
         l_obj.put('locatie_naam', nvl(l_location_rec.name, ''));
         l_obj.put('locatie_adres', nvl(l_location_rec.street_name, l_client_rec.street_name));
@@ -555,7 +568,7 @@ create or replace package body icca_pdf_fase_control_data as
             where fom.adt_id = p_adt_id
             and err.technical_aspects_image_id is not null
             union all
-            select  nvl(img2.doc_id, 66023 )     as image_id
+            select  img2.doc_id     as image_id
             ,       fom.areacode ||': ' || rmk.remarktext  as beschrijving
             from    auditremarks2 rmk
             join    audits2 adt on adt.id = rmk.auditid
@@ -564,7 +577,7 @@ create or replace package body icca_pdf_fase_control_data as
             where   adt.adt_id = p_adt_id
             -- and     img2.doc_id is not null
             union all
-            select  nvl(fmr.remark_image_id, 66023 )    as image_id
+            select  fmr.remark_image_id    as image_id
             ,       case
                         when fom.migrated_data = 'Y' then fom.migrated_area_code
                         else flr.name || '-' || ara.abbreviation || '.' || fom.area_number
@@ -575,6 +588,13 @@ create or replace package body icca_pdf_fase_control_data as
             join    icca_areas ara on fom.ara_id = ara.id
             where   fom.adt_id = p_adt_id            
         ) loop
+            if r.image_id is null then
+                -- Opmerking zonder foto: alleen de tekst, het template toont "Geen foto toegevoegd"
+                l_obj := json_object_t();
+                l_obj.put('beschrijving', nvl(r.beschrijving, ''));
+                l_arr.append(l_obj);
+                continue;
+            end if;
             begin
             select doc.file_url
                 into l_file_url
